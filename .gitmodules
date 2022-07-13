@@ -1,0 +1,3 @@
+[submodule "flenda/lib/forge-std"]
+	path = flenda/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
