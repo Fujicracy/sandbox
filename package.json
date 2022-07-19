@@ -1,8 +1,13 @@
 {
   "name": "sandbox",
   "version": "1.0.0",
+  "description": "Fujidao labs sandbox",
   "main": "index.js",
-  "repository": "https://github.com/Fujicracy/sandbox.git",
-  "author": "DCota <32775237+DaigaroCota@users.noreply.github.com>",
-  "license": "MIT"
+  "repository": "https://github.com/Fujicracy/sandbox",
+  "author": "Fujidao Labs OÜ",
+  "license": "GPL-2.0-or-later",
+  "private": "no",
+  "workspaces": [
+    "packages/*"
+  ]
 }
