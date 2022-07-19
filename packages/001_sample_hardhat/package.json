@@ -1,0 +1,12 @@
+{
+  "name": "001_sample_hardhat",
+  "version": "1.0.0",
+  "description": "This is a sample hardhat project",
+  "author": "fujidao labs",
+  "license": "GPL-2.0-or-later",
+  "private": false,
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "hardhat": "^2.10.1"
+  }
+}
