@@ -1,5 +1,7 @@
 node_modules
 .env
+*.txt
+
 coverage
 coverage.json
 typechain
