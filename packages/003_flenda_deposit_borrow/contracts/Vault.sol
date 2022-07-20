@@ -3,7 +3,6 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
-
 contract Vault is ERC4626{
 
   constructor(address asset) ERC4626(IERC20Metadata(asset)) ERC20('shares Of Asset', 'shA') {

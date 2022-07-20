@@ -111,20 +111,22 @@ library AaveV3Rinkeby {
    * @notice See {ILendingProvider} 
    */
   function getDepositRateFor(address asset) external view returns (uint256 rate) {
-    IAaveProtocolDataProvider aaveData = _getAaveProtocolDataProvider();
-    (, , , , , rate, , , , , , ) = aaveData.getReserveData(
+    IPool aaveData = _getPool();
+    IPool.ReserveData memory rdata = aaveData.getReserveData(
       asset == _getNativeAddr() ? _getWrappedNativeAddr() : asset
     );
+    rate = rdata.currentLiquidityRate;
   }
 
   /**
    * @notice See {ILendingProvider}  
    */
   function getBorrowRateFor(address asset) external view returns (uint256 rate) {
-    IAaveProtocolDataProvider aaveData = _getAaveProtocolDataProvider();
-    (, , , , , , rate, , , , , ) = aaveData.getReserveData(
+    IPool aaveData = _getPool();
+    IPool.ReserveData memory rdata = aaveData.getReserveData(
       asset == _getNativeAddr() ? _getWrappedNativeAddr() : asset
     );
+    rate = rdata.currentVariableBorrowRate;
   }
 
   /**
