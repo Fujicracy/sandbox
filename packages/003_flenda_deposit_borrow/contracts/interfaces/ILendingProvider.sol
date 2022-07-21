@@ -9,6 +9,12 @@ pragma solidity ^0.8.9;
 interface ILendingProvider {
 
   /**
+  * @notice Returns the operator address that requires ERC20-approval for deposits.
+  * @param asset address.
+  */
+  function approveOperator(address asset) external payable returns(address operator);
+
+  /**
   * @notice Performs deposit operation at lending provider on behalf caller.
   * @param asset address.
   * @param amount amount integer. 

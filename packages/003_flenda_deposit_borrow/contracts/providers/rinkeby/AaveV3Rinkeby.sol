@@ -39,6 +39,13 @@ library AaveV3Rinkeby {
   /**
   * @notice See {ILendingProvider} 
   */
+  function approveOperator(address) external pure returns(address operator) {
+    operator = address(_getPool());
+  }
+
+  /**
+  * @notice See {ILendingProvider} 
+  */
   function deposit(address asset, uint256 amount) external returns(bool success) {
     IPool aave = _getPool();
     bool isNative = asset == _getNativeAddr();
