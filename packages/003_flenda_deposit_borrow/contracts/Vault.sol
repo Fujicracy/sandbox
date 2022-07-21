@@ -8,14 +8,24 @@ import "./interfaces/IFujiOracle.sol";
 contract Vault is ERC4626 {
     using Math for uint256;
 
-    Struct Factor {
-      uint64 num;
-      uint64 denum;
+    struct Factor {
+        uint64 num;
+        uint64 denum;
     }
 
-    event Borrow(address indexed caller, address indexed owner, uint256 debt, uint256 shares);
+    event Borrow(
+        address indexed caller,
+        address indexed owner,
+        uint256 debt,
+        uint256 shares
+    );
 
-    event Payback(address indexed caller, address indexed owner, uint256 debt, uint256 shares);
+    event Payback(
+        address indexed caller,
+        address indexed owner,
+        uint256 debt,
+        uint256 shares
+    );
 
     IERC20Metadata internal immutable _debtAsset;
 
@@ -30,14 +40,14 @@ contract Vault is ERC4626 {
 
     Factor public maxLtv;
 
-	  Factor public liqRatio;
+    Factor public liqRatio;
 
     constructor(
         address asset,
         address debtAsset_,
         address fujiOracle,
-        Factor maxLtv_,
-        Factor liqRatio_,
+        Factor memory maxLtv_,
+        Factor memory liqRatio_
     ) ERC4626(IERC20Metadata(asset)) ERC20("Flenda Vault Shares", "fVshs") {
         _debtAsset = IERC20Metadata(debtAsset_);
         oracle = IFujiOracle(fujiOracle);
@@ -64,9 +74,14 @@ contract Vault is ERC4626 {
         // assets are transfered and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
         address asset = asset();
-        SafeERC20.safeTransferFrom(asset, caller, address(this), assets);
+        SafeERC20.safeTransferFrom(
+            IERC20(asset),
+            caller,
+            address(this),
+            assets
+        );
         address spender = activeProvider.approveOperator(asset);
-        SafeERC20.safeApprove(asset, spender, assets);
+        SafeERC20.safeApprove(IERC20(asset), spender, assets);
         activeProvider.deposit(asset, assets);
         _mint(receiver, shares);
 
@@ -80,8 +95,8 @@ contract Vault is ERC4626 {
         address onBehalf
     ) public override returns (uint256) {
         // TODO Need to add security to onBehalf !!!!!!!!
-        require(debt > 0, "Wrong input");
-        require(assets =< maxWithdraw(onBehalf), "Withdraw more than max");
+        require(assets > 0, "Wrong input");
+        require(assets <= maxWithdraw(onBehalf), "Withdraw more than max");
 
         uint256 shares = previewWithdraw(assets);
         _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
@@ -91,7 +106,7 @@ contract Vault is ERC4626 {
 
     /** @dev Overriden to check assets locked by debt {IERC4262-maxWithdraw}. */
     function maxWithdraw(address owner) public view override returns (uint256) {
-      return _computeFreeAssets(owner);
+        return _computeFreeAssets(owner);
     }
 
     /** @dev Overriden to check shares locked by debt {IERC4262-maxRedeem}. */
@@ -114,8 +129,9 @@ contract Vault is ERC4626 {
         // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
         // shares are burned and after the assets are transfered, which is a valid state.
         _burn(owner, shares);
-        activeProvider.withdraw(asset(), assets);
-        SafeERC20.safeTransfer(_asset, receiver, assets);
+        address asset = asset();
+        activeProvider.withdraw(asset, assets);
+        SafeERC20.safeTransfer(IERC20(asset), receiver, assets);
 
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
@@ -126,10 +142,10 @@ contract Vault is ERC4626 {
         address receiver,
         address onBehalf
     ) public override returns (uint256) {
-        require(shares <= maxRedeem(owner), "Redeem more than max");
+        require(shares <= maxRedeem(onBehalf), "Redeem more than max");
 
         uint256 assets = previewRedeem(shares);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
 
         return assets;
     }
@@ -173,16 +189,13 @@ contract Vault is ERC4626 {
     }
 
     /** @dev Based on {IERC4262-deposit}. */
-    function borrow(
-        uint256 debt,
-        address onBehalf
-    ) public virtual override returns (uint256) {
+    function borrow(uint256 debt, address onBehalf) public returns (uint256) {
         // TODO Need to add security to onBehalf !!!!!!!!
         require(debt > 0, "Wrong input");
-        require(debt =< maxBorrow(onBehalf), "Not enough assets");
+        require(debt <= maxBorrow(onBehalf), "Not enough assets");
 
-        uint256 shares = convertDebtToShares(assets);
-        _borrow(_msgSender(), onBehalf, assets, shares);
+        uint256 shares = convertDebtToShares(debt);
+        _borrow(_msgSender(), onBehalf, debt, shares);
 
         return shares;
     }
@@ -191,25 +204,26 @@ contract Vault is ERC4626 {
      * @dev Burns debtShares from onBehalf.
      * - MUST emit the Payback event.
      */
-    function payback(
-        uint256 debt,
-        address onBehalf
-    ) public virtual returns (uint256) {
+    function payback(uint256 debt, address onBehalf)
+        public
+        virtual
+        returns (uint256)
+    {
         require(debt > 0, "Wrong input");
-        require(debt <= _convertToDebt(_debtShares[onBehalf]), "Payback more than max");
+        require(
+            debt <= convertToDebt(_debtShares[onBehalf]),
+            "Payback more than max"
+        );
 
         uint256 shares = convertDebtToShares(debt);
-        _payback(_msgSender(), onBehalf, assets, shares);
+        _payback(_msgSender(), onBehalf, debt, shares);
 
         return shares;
     }
 
     function _computeTotalDebt() internal view returns (uint256 debt) {
         for (uint256 i = 0; i < _providers.length; ) {
-            debt += _providers[i].getBorrowBalance(
-                debtAsset(),
-                address(this)
-            );
+            debt += _providers[i].getBorrowBalance(debtAsset(), address(this));
             unchecked {
                 ++i;
             }
@@ -219,40 +233,46 @@ contract Vault is ERC4626 {
     function _computeMaxBorrow(address borrower)
         internal
         view
-        returns (uint256 maxBorrow)
+        returns (uint256 max)
     {
         uint256 price = oracle.getPriceOf(
-          debtAsset(),
-          asset(),
-          _debtAsset.decimals()
+            debtAsset(),
+            asset(),
+            _debtAsset.decimals()
         );
         uint256 assetShares = balanceOf(borrower);
-        uint256 assets = _convertToAssets(assetShares);
+        uint256 assets = convertToAssets(assetShares);
         uint256 debtShares = _debtShares[borrower];
-        uint256 debt = _convertToDebt(debtShares);
+        uint256 debt = convertToDebt(debtShares);
 
-        uint256 baseUserMaxBorrow = ((assets * maxLtv.num * price) / (maxLtv.denum * 10 ** IERC20Metadata(asset()).decimals()));
-        maxBorrow = baseUserMaxBorrow > debt ? baseUserMaxBorrow - debt : 0;
+        uint256 baseUserMaxBorrow = ((assets * maxLtv.num * price) /
+            (maxLtv.denum * 10**IERC20Metadata(asset()).decimals()));
+        max = baseUserMaxBorrow > debt ? baseUserMaxBorrow - debt : 0;
     }
 
-    function _computeFreeAssets(address owner) internal view returns (uint256 freeAssets) {
-      uint256 debtShares = _debtShares[owner];
-      bool hasDebtShares = _debtShares[owner] > 0 ? true : false;
-      if (hasDebtShares) {
-        return _convertToAssets(balanceOf(owner), Math.Rounding.Down);
-      } else {
-        uint256 debt = convertToDebt(debtShares);
-        uint256 price = oracle.getPriceOf(
-          asset(),
-          debtAsset(),
-          IERC20Metadata(asset()).decimals()
-        );
-        uint256 lockedAssets = (debt * maxLtv.denum * price) / (maxLtv.num * 10 ** _debtAsset.decimals());
-        uint256 assetShares = balanceOf(borrower);
-        uint256 assets = _convertToAssets(assetShares);
+    function _computeFreeAssets(address owner)
+        internal
+        view
+        returns (uint256 freeAssets)
+    {
+        uint256 debtShares = _debtShares[owner];
+        bool hasDebtShares = _debtShares[owner] > 0 ? true : false;
+        if (hasDebtShares) {
+            return _convertToAssets(balanceOf(owner), Math.Rounding.Down);
+        } else {
+            uint256 debt = convertToDebt(debtShares);
+            uint256 price = oracle.getPriceOf(
+                asset(),
+                debtAsset(),
+                IERC20Metadata(asset()).decimals()
+            );
+            uint256 lockedAssets = (debt * maxLtv.denum * price) /
+                (maxLtv.num * 10**_debtAsset.decimals());
+            uint256 assetShares = balanceOf(owner);
+            uint256 assets = convertToAssets(assetShares);
 
-        freeAssets = assets > lockedAssets ? assets - lockedAssets : 0;
-      }
+            freeAssets = assets > lockedAssets ? assets - lockedAssets : 0;
+        }
     }
 
     /**
@@ -306,7 +326,7 @@ contract Vault is ERC4626 {
         uint256 debt,
         uint256 shares
     ) internal {
-        _mintDebtShares(receiver, shares);
+        _mintDebtShares(onBehalf, shares);
         activeProvider.borrow(debtAsset(), debt);
 
         // If _asset is ERC777, `transferFrom` can trigger a reenterancy BEFORE the transfer happens through the
@@ -316,8 +336,8 @@ contract Vault is ERC4626 {
         // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
         // assets are transfered and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
-        SafeERC20.safeTransferFrom(debtAsset(), caller, address(this), debt);
-        
+        SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
+
         emit Borrow(caller, onBehalf, debt, shares);
     }
 
@@ -337,13 +357,13 @@ contract Vault is ERC4626 {
         // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
         // assets are transfered and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
-        SafeERC20.safeTransferFrom(debtAsset(), caller, address(this), debt);
+        SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
         address spender = activeProvider.approveOperator(debtAsset());
-        SafeERC20.safeApprove(debtAsset(), spender, debt);
+        SafeERC20.safeApprove(_debtAsset, spender, debt);
 
         activeProvider.payback(debtAsset(), debt);
         _burnDebtShares(onBehalf, shares);
-        
+
         emit Payback(caller, onBehalf, debt, shares);
     }
 
@@ -379,8 +399,9 @@ contract Vault is ERC4626 {
         address from,
         address to,
         uint256 amount
-    ) internal override {
-        require(amount =< maxRedeem(from), "Transfer more than max");
+    ) internal view override {
+        to;
+        require(amount <= maxRedeem(from), "Transfer more than max");
     }
 
     function _afterTokenTransfer(

@@ -17,7 +17,7 @@ contract FujiOracle is IFujiOracle, Ownable {
   /**
    * @dev Initializes the contract setting '_priceFeeds' addresses for '_assets'
    */
-  constructor(address[] memory _assets, address[] memory _priceFeeds) Claimable() {
+  constructor(address[] memory _assets, address[] memory _priceFeeds) {
     require(_assets.length == _priceFeeds.length, Errors.ORACLE_INVALID_LENGTH);
     for (uint256 i = 0; i < _assets.length; i++) {
       usdPriceFeeds[_assets[i]] = _priceFeeds[i];
