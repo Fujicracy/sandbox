@@ -342,7 +342,6 @@ contract Vault is ERC4626 {
         SafeERC20.safeApprove(debtAsset(), spender, debt);
 
         activeProvider.payback(debtAsset(), debt);
-
         _burnDebtShares(onBehalf, shares);
         
         emit Payback(caller, onBehalf, debt, shares);
