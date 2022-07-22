@@ -1,6 +1,8 @@
 require("dotenv").config();
 const fs = require("fs");
+
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomiclabs/hardhat-etherscan");
 
 if (!process.env.INFURA_ID) {
   throw "Please set INFURA_ID in ./packages/hardhat/.env";
@@ -33,6 +35,13 @@ module.exports = {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : { mnemonic: mnemonic() },
     },
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_ID}`,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : { mnemonic: mnemonic() },
+    },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_KEY
   }
 };
 

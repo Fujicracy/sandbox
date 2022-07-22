@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @author fujidao Labs
  * @notice This library allows interaction with AaveV3.
  */
-library AaveV3Rinkeby {
+library AaveV3Goerli {
   using UniversalERC20 for IERC20;
 
   function _getNativeAddr() internal pure returns (address) {
@@ -21,15 +21,15 @@ library AaveV3Rinkeby {
   }
 
   function _getWrappedNativeAddr() internal pure returns (address) {
-    return 0xd74047010D77c5901df5b0f9ca518aED56C85e8D;
+    return 0x2e3A2fb8473316A02b8A297B982498E661E1f6f5;
   }
 
   function _getAaveProtocolDataProvider() internal pure returns (IAaveProtocolDataProvider) {
-    return IAaveProtocolDataProvider(0xBAB2E7afF5acea53a43aEeBa2BA6298D8056DcE5);
+    return IAaveProtocolDataProvider(0x9BE876c6DC42215B00d7efe892E2691C3bc35d10);
   }
 
   function _getPool() internal pure returns (IPool) {
-    return IPool(0xE039BdF1d874d27338e09B55CB09879Dedca52D8);
+    return IPool(0x368EedF3f56ad10b9bC57eed4Dac65B26Bb667f6);
   }
 
   function _getUnwrapper() internal pure returns (address) {
