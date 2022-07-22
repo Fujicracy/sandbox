@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
@@ -412,5 +412,44 @@ contract Vault is ERC4626 {
         from;
         to;
         amount;
+    }
+
+    ///////////////////////////
+    /// Admin set functions ///
+    ///////////////////////////
+
+    function setOracle(IFujiOracle newOracle) external {
+        // TODO needs admin restriction
+        // TODO needs input validation
+        oracle = newOracle;
+        // TODO needs to emit event.
+    }
+
+    function setProviders(ILendingProvider[] memory providers) external {
+        // TODO needs admin restriction
+        // TODO needs input validation
+        _providers = providers;
+        // TODO needs to emit event.
+    }
+
+    function setActiveProvider(ILendingProvider activeProvider_) external {
+        // TODO needs admin restriction
+        // TODO needs input validation
+        activeProvider = activeProvider_;
+        // TODO needs to emit event.
+    }
+
+    function setMaxLtv(Factor calldata maxLtv_) external {
+        // TODO needs admin restriction
+        // TODO needs input validation
+        maxLtv = maxLtv_;
+        // TODO needs to emit event.
+    }
+
+    function setLiqRatio(Factor calldata liqRatio_) external {
+        // TODO needs admin restriction
+        // TODO needs input validation
+        liqRatio = liqRatio_;
+        // TODO needs to emit event.
     }
 }
