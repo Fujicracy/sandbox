@@ -10,3 +10,6 @@
 [submodule "packages/004_xfuji_forge/lib/openzeppelin-contracts"]
 	path = packages/004_xfuji_forge/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts/
+[submodule "packages/004_xfuji_forge/lib/solmate"]
+	path = packages/004_xfuji_forge/lib/solmate
+	url = https://github.com/transmissions11/solmate
