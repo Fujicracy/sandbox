@@ -49,28 +49,14 @@ contract Vault is ERC4626 {
   /// Asset management overrides from ERC4626 ///
   ///////////////////////////////////////////////
 
-  /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4262-deposit}. */
-  function _deposit(
-    address caller,
-    address receiver,
-    uint256 assets,
-    uint256 shares
-  ) internal override {
-    // If _asset is ERC777, `transferFrom` can trigger a reenterancy BEFORE the transfer happens through the
-    // `tokensToSend` hook. On the other hand, the `tokenReceived` hook, that is triggered after the transfer,
-    // calls the vault, which is assumed not malicious.
-    //
-    // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
-    // assets are transfered and before the shares are minted, which is a valid state.
-    // slither-disable-next-line reentrancy-no-eth
-    address asset = asset();
-    SafeERC20.safeTransferFrom(IERC20(asset), caller, address(this), assets);
-    address spender = activeProvider.approveOperator(asset);
-    SafeERC20.safeApprove(IERC20(asset), spender, assets);
-    activeProvider.deposit(asset, assets);
-    _mint(receiver, shares);
+  /** @dev Overriden to check assets locked by debt {IERC4262-maxWithdraw}. */
+  function maxWithdraw(address owner) public view override returns (uint256) {
+    return _computeFreeAssets(owner);
+  }
 
-    emit Deposit(caller, receiver, assets, shares);
+  /** @dev Overriden to check shares locked by debt {IERC4262-maxRedeem}. */
+  function maxRedeem(address owner) public view override returns (uint256) {
+    return _convertToShares(_computeFreeAssets(owner), Math.Rounding.Down);
   }
 
   /** @dev Overriden to perform withdraw checks {IERC4262-withdraw}. */
@@ -89,38 +75,6 @@ contract Vault is ERC4626 {
     return shares;
   }
 
-  /** @dev Overriden to check assets locked by debt {IERC4262-maxWithdraw}. */
-  function maxWithdraw(address owner) public view override returns (uint256) {
-    return _computeFreeAssets(owner);
-  }
-
-  /** @dev Overriden to check shares locked by debt {IERC4262-maxRedeem}. */
-  function maxRedeem(address owner) public view override returns (uint256) {
-    return _convertToShares(_computeFreeAssets(owner), Math.Rounding.Down);
-  }
-
-  /** @dev Overriden to perform _withdraw adding flow at lending provider {IERC4262-withdraw}. */
-  function _withdraw(
-    address caller,
-    address receiver,
-    address owner,
-    uint256 assets,
-    uint256 shares
-  ) internal override {
-    // If _asset is ERC777, `transfer` can trigger a reentrancy AFTER the transfer happens through the
-    // `tokensReceived` hook. On the other hand, the `tokensToSend` hook, that is triggered before the transfer,
-    // calls the vault, which is assumed not malicious.
-    //
-    // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
-    // shares are burned and after the assets are transfered, which is a valid state.
-    _burn(owner, shares);
-    address asset = asset();
-    activeProvider.withdraw(asset, assets);
-    SafeERC20.safeTransfer(IERC20(asset), receiver, assets);
-
-    emit Withdraw(caller, receiver, owner, assets, shares);
-  }
-
   /** @dev Overriden See {IERC4262-redeem}. */
   function redeem(
     uint256 shares,
@@ -133,6 +87,42 @@ contract Vault is ERC4626 {
     _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
 
     return assets;
+  }
+
+  /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4262-deposit}. */
+  function _deposit(
+    address caller,
+    address receiver,
+    uint256 assets,
+    uint256 shares
+  ) internal override {
+    address asset = asset();
+
+    SafeERC20.safeTransferFrom(IERC20(asset), caller, address(this), assets);
+    address spender = activeProvider.approveOperator(asset);
+
+    SafeERC20.safeApprove(IERC20(asset), spender, assets);
+    activeProvider.deposit(asset, assets);
+    _mint(receiver, shares);
+
+    emit Deposit(caller, receiver, assets, shares);
+  }
+
+  /** @dev Overriden to perform _withdraw adding flow at lending provider {IERC4262-withdraw}. */
+  function _withdraw(
+    address caller,
+    address receiver,
+    address owner,
+    uint256 assets,
+    uint256 shares
+  ) internal override {
+    _burn(owner, shares);
+
+    address asset = asset();
+    activeProvider.withdraw(asset, assets);
+    SafeERC20.safeTransfer(IERC20(asset), receiver, assets);
+
+    emit Withdraw(caller, receiver, owner, assets, shares);
   }
 
   ///////////////////////////////////////////////////////////
@@ -279,13 +269,6 @@ contract Vault is ERC4626 {
     _mintDebtShares(onBehalf, shares);
     activeProvider.borrow(debtAsset(), debt);
 
-    // If _asset is ERC777, `transferFrom` can trigger a reenterancy BEFORE the transfer happens through the
-    // `tokensToSend` hook. On the other hand, the `tokenReceived` hook, that is triggered after the transfer,
-    // calls the vault, which is assumed not malicious.
-    //
-    // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
-    // assets are transfered and before the shares are minted, which is a valid state.
-    // slither-disable-next-line reentrancy-no-eth
     SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
 
     emit Borrow(caller, onBehalf, debt, shares);
@@ -300,13 +283,6 @@ contract Vault is ERC4626 {
     uint256 debt,
     uint256 shares
   ) internal {
-    // If _asset is ERC777, `transferFrom` can trigger a reenterancy BEFORE the transfer happens through the
-    // `tokensToSend` hook. On the other hand, the `tokenReceived` hook, that is triggered after the transfer,
-    // calls the vault, which is assumed not malicious.
-    //
-    // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
-    // assets are transfered and before the shares are minted, which is a valid state.
-    // slither-disable-next-line reentrancy-no-eth
     SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
     address spender = activeProvider.approveOperator(debtAsset());
     SafeERC20.safeApprove(_debtAsset, spender, debt);
