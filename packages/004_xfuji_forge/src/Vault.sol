@@ -169,13 +169,17 @@ contract Vault is ERC4626 {
   }
 
   /** @dev Based on {IERC4262-deposit}. */
-  function borrow(uint256 debt, address onBehalf) public returns (uint256) {
+  function borrow(
+    uint256 debt,
+    address receiver,
+    address onBehalf
+  ) public returns (uint256) {
     // TODO Need to add security to onBehalf !!!!!!!!
     require(debt > 0, "Wrong input");
     require(debt <= maxBorrow(onBehalf), "Not enough assets");
 
     uint256 shares = convertDebtToShares(debt);
-    _borrow(_msgSender(), onBehalf, debt, shares);
+    _borrow(_msgSender(), receiver, onBehalf, debt, shares);
 
     return shares;
   }
@@ -271,6 +275,7 @@ contract Vault is ERC4626 {
    */
   function _borrow(
     address caller,
+    address receiver,
     address onBehalf,
     uint256 debt,
     uint256 shares
@@ -278,7 +283,7 @@ contract Vault is ERC4626 {
     _mintDebtShares(onBehalf, shares);
     activeProvider.borrow(debtAsset(), debt);
 
-    SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
+    SafeERC20.safeTransferFrom(_debtAsset, receiver, address(this), debt);
 
     emit Borrow(caller, onBehalf, debt, shares);
   }

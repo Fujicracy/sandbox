@@ -18,7 +18,11 @@ interface IVault is IERC4626 {
    * - MUST revert if caller is not onBehalf or permission to act onBehalf.
    *
    */
-  function borrow(uint256 debt, address onBehalf) external returns (uint256);
+  function borrow(
+    uint256 debt,
+    address receiver,
+    address onBehalf
+  ) external returns (uint256);
 
   /**
    * @dev burns debtShares to onBehalf by paying back loan with exact amount of underlying tokens.
@@ -27,5 +31,5 @@ interface IVault is IERC4626 {
    *
    * NOTE: most implementations will require pre-erc20-approval of the underlying asset token.
    */
-  function payback(uint256 debt, address onBehalf) external returns (uint256);
+  function payback(uint256 debt, address receiver) external returns (uint256);
 }
