@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 import "openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol";
 import "./interfaces/ILendingProvider.sol";
 import "./interfaces/IFujiOracle.sol";
+import "./interfaces/IRouter.sol";
 
 contract Vault is ERC4626 {
   using Math for uint256;
@@ -27,6 +28,7 @@ contract Vault is ERC4626 {
   ILendingProvider public activeProvider;
 
   IFujiOracle public oracle;
+  IRouter public router;
 
   Factor public maxLtv;
 
@@ -35,22 +37,27 @@ contract Vault is ERC4626 {
   constructor(
     address asset_,
     address debtAsset_,
-    address fujiOracle,
+    address oracle_,
+    address router_,
     Factor memory maxLtv_,
     Factor memory liqRatio_
   )
     ERC4626(IERC20Metadata(asset_))
     ERC20(
       // ex: Fuji-X Dai Stablecoin Vault Shares
-      string(abi.encodePacked("Fuji-X ", _asset.name(), " Vault Shares")),
+      string(abi.encodePacked("Fuji-X ", IERC20Metadata(asset_).name(), " Vault Shares")),
       // ex: fxDAI
-      string(abi.encodePacked("fx", _asset.symbol()))
+      string(abi.encodePacked("fx", IERC20Metadata(asset_).symbol()))
     )
   {
     _debtAsset = IERC20Metadata(debtAsset_);
-    oracle = IFujiOracle(fujiOracle);
+    oracle = IFujiOracle(oracle_);
     maxLtv = maxLtv_;
     liqRatio = liqRatio_;
+
+    router = IRouter(router_);
+    SafeERC20.safeApprove(IERC20(asset_), router_, type(uint256).max);
+    SafeERC20.safeApprove(IERC20(debtAsset_), router_, type(uint256).max);
   }
 
   ///////////////////////////////////////////////

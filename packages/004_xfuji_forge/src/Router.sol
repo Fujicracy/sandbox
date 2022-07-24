@@ -2,13 +2,14 @@
 pragma solidity ^0.8.9;
 
 import "./interfaces/IVault.sol";
+import "./interfaces/IRouter.sol";
 import "./helpers/PeripheryPayments.sol";
 
 // TODO inherit from SelfPermit, Multicall, PeripheryPayments
 // for additional functionalitites
 // ref: https://github.com/fei-protocol/ERC4626/blob/main/src/ERC4626RouterBase.sol
 
-contract Router is PeripheryPayments {
+contract Router is IRouter, PeripheryPayments {
   mapping(uint256 => address) public routerByChainId;
 
   constructor(IWETH9 weth) PeripheryPayments(weth) {}
