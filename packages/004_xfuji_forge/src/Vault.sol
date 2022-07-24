@@ -33,12 +33,12 @@ contract Vault is ERC4626 {
   Factor public liqRatio;
 
   constructor(
-    address asset,
+    address asset_,
     address debtAsset_,
     address fujiOracle,
     Factor memory maxLtv_,
     Factor memory liqRatio_
-  ) ERC4626(IERC20Metadata(asset)) ERC20("Flenda Vault Shares", "fVshs") {
+  ) ERC4626(IERC20Metadata(asset_)) ERC20("Flenda Vault Shares", "fVshs") {
     _debtAsset = IERC20Metadata(debtAsset_);
     oracle = IFujiOracle(fujiOracle);
     maxLtv = maxLtv_;
@@ -87,6 +87,16 @@ contract Vault is ERC4626 {
     _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
 
     return assets;
+  }
+
+  /// Token transfer hooks.
+  function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal view override {
+    to;
+    require(amount <= maxRedeem(from), "Transfer more than max");
   }
 
   /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4262-deposit}. */
@@ -313,27 +323,6 @@ contract Vault is ERC4626 {
 
   function getProviders() external view returns (ILendingProvider[] memory list) {
     list = _providers;
-  }
-
-  /// Token transfer hooks.
-
-  function _beforeTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal view override {
-    to;
-    require(amount <= maxRedeem(from), "Transfer more than max");
-  }
-
-  function _afterTokenTransfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal pure override {
-    from;
-    to;
-    amount;
   }
 
   ///////////////////////////
