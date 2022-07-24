@@ -63,14 +63,14 @@ contract Vault is ERC4626 {
   function withdraw(
     uint256 assets,
     address receiver,
-    address onBehalf
+    address owner
   ) public override returns (uint256) {
-    // TODO Need to add security to onBehalf !!!!!!!!
+    // TODO Need to add security to owner !!!!!!!!
     require(assets > 0, "Wrong input");
-    require(assets <= maxWithdraw(onBehalf), "Withdraw more than max");
+    require(assets <= maxWithdraw(owner), "Withdraw more than max");
 
     uint256 shares = previewWithdraw(assets);
-    _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
+    _withdraw(_msgSender(), receiver, owner, assets, shares);
 
     return shares;
   }
@@ -79,12 +79,12 @@ contract Vault is ERC4626 {
   function redeem(
     uint256 shares,
     address receiver,
-    address onBehalf
+    address owner
   ) public override returns (uint256) {
-    require(shares <= maxRedeem(onBehalf), "Redeem more than max");
+    require(shares <= maxRedeem(owner), "Redeem more than max");
 
     uint256 assets = previewRedeem(shares);
-    _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
+    _withdraw(_msgSender(), receiver, owner, assets, shares);
 
     return assets;
   }
@@ -172,28 +172,28 @@ contract Vault is ERC4626 {
   function borrow(
     uint256 debt,
     address receiver,
-    address onBehalf
+    address owner
   ) public returns (uint256) {
-    // TODO Need to add security to onBehalf !!!!!!!!
+    // TODO Need to add security to owner !!!!!!!!
     require(debt > 0, "Wrong input");
-    require(debt <= maxBorrow(onBehalf), "Not enough assets");
+    require(debt <= maxBorrow(owner), "Not enough assets");
 
     uint256 shares = convertDebtToShares(debt);
-    _borrow(_msgSender(), receiver, onBehalf, debt, shares);
+    _borrow(_msgSender(), receiver, owner, debt, shares);
 
     return shares;
   }
 
   /**
-   * @dev Burns debtShares from onBehalf.
+   * @dev Burns debtShares from owner.
    * - MUST emit the Payback event.
    */
-  function payback(uint256 debt, address onBehalf) public virtual returns (uint256) {
+  function payback(uint256 debt, address owner) public virtual returns (uint256) {
     require(debt > 0, "Wrong input");
-    require(debt <= convertToDebt(_debtShares[onBehalf]), "Payback more than max");
+    require(debt <= convertToDebt(_debtShares[owner]), "Payback more than max");
 
     uint256 shares = convertDebtToShares(debt);
-    _payback(_msgSender(), onBehalf, debt, shares);
+    _payback(_msgSender(), owner, debt, shares);
 
     return shares;
   }
@@ -276,16 +276,16 @@ contract Vault is ERC4626 {
   function _borrow(
     address caller,
     address receiver,
-    address onBehalf,
+    address owner,
     uint256 debt,
     uint256 shares
   ) internal {
-    _mintDebtShares(onBehalf, shares);
+    _mintDebtShares(owner, shares);
     activeProvider.borrow(debtAsset(), debt);
 
     SafeERC20.safeTransferFrom(_debtAsset, receiver, address(this), debt);
 
-    emit Borrow(caller, onBehalf, debt, shares);
+    emit Borrow(caller, owner, debt, shares);
   }
 
   /**
@@ -293,16 +293,16 @@ contract Vault is ERC4626 {
    */
   function _payback(
     address caller,
-    address onBehalf,
+    address owner,
     uint256 debt,
     uint256 shares
   ) internal {
     SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
 
     activeProvider.payback(debtAsset(), debt);
-    _burnDebtShares(onBehalf, shares);
+    _burnDebtShares(owner, shares);
 
-    emit Payback(caller, onBehalf, debt, shares);
+    emit Payback(caller, owner, debt, shares);
   }
 
   function _mintDebtShares(address account, uint256 amount) internal {
