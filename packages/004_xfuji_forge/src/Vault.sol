@@ -352,12 +352,12 @@ contract Vault is ERC4626 {
     // TODO needs input validation
     // max approve asset and debtAsset
     address asset = asset();
-    address spender = activeProvider.approveOperator(asset);
+    address spender = activeProvider.approvedOperator(asset);
     SafeERC20.safeApprove(IERC20(asset), spender, type(uint256).max);
 
-    address debtAsset = debtAsset();
-    address spender = activeProvider.approveOperator(debtAsset);
-    SafeERC20.safeApprove(debtAsset, spender, type(uint256).max);
+    address debt = debtAsset();
+    spender = activeProvider.approvedOperator(debt);
+    SafeERC20.safeApprove(IERC20(debt), spender, type(uint256).max);
   }
 
   function setMaxLtv(Factor calldata maxLtv_) external {

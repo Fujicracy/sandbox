@@ -39,7 +39,7 @@ library AaveV3Goerli {
   /**
    * @notice See {ILendingProvider}
    */
-  function approveOperator(address) external pure returns (address operator) {
+  function approvedOperator(address) external pure returns (address operator) {
     operator = address(_getPool());
   }
 

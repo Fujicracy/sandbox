@@ -11,7 +11,7 @@ interface ILendingProvider {
    * @notice Returns the operator address that requires ERC20-approval for deposits.
    * @param asset address.
    */
-  function approveOperator(address asset) external payable returns (address operator);
+  function approvedOperator(address asset) external payable returns (address operator);
 
   /**
    * @notice Performs deposit operation at lending provider on behalf caller.
