@@ -109,10 +109,9 @@ contract Vault is ERC4626 {
     address asset = asset();
 
     SafeERC20.safeTransferFrom(IERC20(asset), caller, address(this), assets);
-    address spender = activeProvider.approveOperator(asset);
 
-    SafeERC20.safeApprove(IERC20(asset), spender, assets);
     activeProvider.deposit(asset, assets);
+
     _mint(receiver, shares);
 
     emit Deposit(caller, receiver, assets, shares);
@@ -294,8 +293,6 @@ contract Vault is ERC4626 {
     uint256 shares
   ) internal {
     SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
-    address spender = activeProvider.approveOperator(debtAsset());
-    SafeERC20.safeApprove(_debtAsset, spender, debt);
 
     activeProvider.payback(debtAsset(), debt);
     _burnDebtShares(onBehalf, shares);
@@ -348,6 +345,19 @@ contract Vault is ERC4626 {
     // TODO needs input validation
     activeProvider = activeProvider_;
     // TODO needs to emit event.
+  }
+
+  function setMaxAllowances() external {
+    // TODO needs admin restriction
+    // TODO needs input validation
+    // max approve asset and debtAsset
+    address asset = asset();
+    address spender = activeProvider.approveOperator(asset);
+    SafeERC20.safeApprove(IERC20(asset), spender, type(uint256).max);
+
+    address debtAsset = debtAsset();
+    address spender = activeProvider.approveOperator(debtAsset);
+    SafeERC20.safeApprove(debtAsset, spender, type(uint256).max);
   }
 
   function setMaxLtv(Factor calldata maxLtv_) external {
