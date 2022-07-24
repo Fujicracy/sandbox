@@ -24,10 +24,7 @@ contract Router is PeripheryPayments {
     vault.borrow(borrowAmount, msg.sender, msg.sender);
   }
 
-  function depositETHAndBorrow(
-    IVault vault,
-    uint256 borrowAmount
-  ) external payable {
+  function depositETHAndBorrow(IVault vault, uint256 borrowAmount) external payable {
     wrapWETH9();
     vault.deposit(msg.value, msg.sender);
     vault.borrow(borrowAmount, msg.sender, msg.sender);

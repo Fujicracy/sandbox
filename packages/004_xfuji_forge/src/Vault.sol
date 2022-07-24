@@ -38,7 +38,15 @@ contract Vault is ERC4626 {
     address fujiOracle,
     Factor memory maxLtv_,
     Factor memory liqRatio_
-  ) ERC4626(IERC20Metadata(asset_)) ERC20("Flenda Vault Shares", "fVshs") {
+  )
+    ERC4626(IERC20Metadata(asset_))
+    ERC20(
+      // ex: Fuji-X Dai Stablecoin Vault Shares
+      string(abi.encodePacked("Fuji-X ", _asset.name(), " Vault Shares")),
+      // ex: fxDAI
+      string(abi.encodePacked("fx", _asset.symbol()))
+    )
+  {
     _debtAsset = IERC20Metadata(debtAsset_);
     oracle = IFujiOracle(fujiOracle);
     maxLtv = maxLtv_;
