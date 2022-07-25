@@ -4,3 +4,8 @@ out = 'out'
 libs = ['lib']
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
+
+[rpc_endpoints]
+mainnet = "${RPC_MAINNET}"
+rinkeby = "${RPC_RINKEBY}"
+goerli = "${RPC_GOERLI}"
