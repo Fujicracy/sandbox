@@ -4,7 +4,6 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/chainlink/IAggregatorV3.sol";
 import "./interfaces/IFujiOracle.sol";
-import "./libraries/Errors.sol";
 
 /**
  * @dev Contract that returns and computes prices for the Fuji protocol
@@ -18,7 +17,7 @@ contract FujiOracle is IFujiOracle, Ownable {
    * @dev Initializes the contract setting '_priceFeeds' addresses for '_assets'
    */
   constructor(address[] memory _assets, address[] memory _priceFeeds) {
-    require(_assets.length == _priceFeeds.length, Errors.ORACLE_INVALID_LENGTH);
+    require(_assets.length == _priceFeeds.length, "Invalid input!");
     for (uint256 i = 0; i < _assets.length; i++) {
       usdPriceFeeds[_assets[i]] = _priceFeeds[i];
     }
@@ -30,7 +29,7 @@ contract FujiOracle is IFujiOracle, Ownable {
    * Emits a {AssetPriceFeedChanged} event.
    */
   function setPriceFeed(address _asset, address _priceFeed) public onlyOwner {
-    require(_priceFeed != address(0), Errors.VL_ZERO_ADDR);
+    require(_priceFeed != address(0), "Zero address!");
     usdPriceFeeds[_asset] = _priceFeed;
     emit AssetPriceFeedChanged(_asset, _priceFeed);
   }
@@ -69,7 +68,7 @@ contract FujiOracle is IFujiOracle, Ownable {
    * Returns the USD price of the given asset
    */
   function _getUSDPrice(address _asset) internal view returns (uint256 price) {
-    require(usdPriceFeeds[_asset] != address(0), Errors.ORACLE_NONE_PRICE_FEED);
+    require(usdPriceFeeds[_asset] != address(0), "Missing price feed!");
 
     (, int256 latestPrice, , , ) = IAggregatorV3(usdPriceFeeds[_asset]).latestRoundData();
 
