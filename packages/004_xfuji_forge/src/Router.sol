@@ -13,7 +13,8 @@ import "./helpers/PeripheryPayments.sol";
 contract Router is IRouter, PeripheryPayments {
   IConnextHandler public connext;
 
-  mapping(uint256 => address) public routerByChainId;
+  // ref: https://docs.nomad.xyz/developers/environments/domain-chain-ids
+  mapping(uint32 => address) public routerByDomain;
 
   constructor(IWETH9 weth, IConnextHandler connext_) PeripheryPayments(weth) {
     connext = connext_;
