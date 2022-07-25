@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "nxtp/core/connext/interfaces/IConnextHandler.sol";
+import "nxtp/core/connext/interfaces/IExecutor.sol";
 import "./interfaces/IVault.sol";
 import "./interfaces/IRouter.sol";
 import "./helpers/PeripheryPayments.sol";
@@ -12,12 +13,29 @@ import "./helpers/PeripheryPayments.sol";
 
 contract Router is IRouter, PeripheryPayments {
   IConnextHandler public connext;
+  IExecutor public executor;
 
   // ref: https://docs.nomad.xyz/developers/environments/domain-chain-ids
   mapping(uint32 => address) public routerByDomain;
 
+  // A modifier for permissioned function calls.
+  // Note: This is an important security consideration. If your target
+  //       contract function is meant to be permissioned, it must check
+  //       that the originating call is from the correct domain and contract.
+  //       Also, check that the msg.sender is the Connext Executor address.
+  modifier onlyConnextExecutor(uint32 originDomain) {
+    require(
+      IExecutor(msg.sender).originSender() == routerByDomain[originDomain] &&
+        IExecutor(msg.sender).origin() == originDomain &&
+        msg.sender == address(executor),
+      "Expected origin contract on origin domain called by Executor"
+    );
+    _;
+  }
+
   constructor(IWETH9 weth, IConnextHandler connext_) PeripheryPayments(weth) {
     connext = connext_;
+    executor = connext.executor();
   }
 
   function depositAndBorrow(
