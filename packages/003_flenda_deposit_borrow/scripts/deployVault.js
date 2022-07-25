@@ -13,8 +13,8 @@ const CHAIN_NAME = process.env.NETWORK;
 const main = async () => {
 
   // Vault constructor parameters
-  const asset = aaveV3Data[CHAIN_NAME].assets.usdc;
-  const debtAsset = aaveV3Data[CHAIN_NAME].assets.weth;
+  const asset = aaveV3Data[CHAIN_NAME].assets.weth;
+  const debtAsset = aaveV3Data[CHAIN_NAME].assets.usdc;
 
   console.log(CHAIN_NAME);
   const Vault = await hre.ethers.getContractFactory("Vault");

@@ -8,6 +8,12 @@ import "./interfaces/IWETH.sol";
 
 import "hardhat/console.sol";
 
+/**
+ * @title XFuji Position Vault.
+ * @author fujidao Labs
+ * @notice This contract manages collateral and debt in an ERC4626 implementation.
+ * @dev Debt shares are not transferable and not represented in ERC4626.
+ */
 contract Vault is ERC4626 {
     using Math for uint256;
     using Address for address;
@@ -119,7 +125,7 @@ contract Vault is ERC4626 {
         return assets;
     }
 
-    /// Token transfer hooks.
+    /// Token shares transfer hooks.
 
     function _beforeTokenTransfer(
         address from,
@@ -238,34 +244,34 @@ contract Vault is ERC4626 {
     }
 
     /** @dev Based on {IERC4626-deposit}. */
-    function borrow(uint256 debt, address onBehalf) public returns (uint256) {
+    function borrow(uint256 debt, address owner) public returns (uint256) {
         // TODO Need to add security to onBehalf !!!!!!!!
         require(debt > 0, "Wrong input");
-        require(debt <= maxBorrow(onBehalf), "Not enough assets");
+        require(debt <= maxBorrow(owner), "Not enough assets");
 
         uint256 shares = convertDebtToShares(debt);
-        _borrow(_msgSender(), onBehalf, debt, shares);
+        _borrow(_msgSender(), owner, debt, shares);
 
         return shares;
     }
 
     /**
-     * @dev Burns debtShares from onBehalf.
+     * @dev Burns debtShares from owner.
      * - MUST emit the Payback event.
      */
-    function payback(uint256 debt, address onBehalf)
+    function payback(uint256 debt, address owner)
         public
         virtual
         returns (uint256)
     {
         require(debt > 0, "Wrong input");
         require(
-            debt <= convertToDebt(_debtShares[onBehalf]),
+            debt <= convertToDebt(_debtShares[owner]),
             "Payback more than max"
         );
 
         uint256 shares = convertDebtToShares(debt);
-        _payback(_msgSender(), onBehalf, debt, shares);
+        _payback(_msgSender(), owner, debt, shares);
 
         return shares;
     }
@@ -384,11 +390,11 @@ contract Vault is ERC4626 {
      */
     function _borrow(
         address caller,
-        address onBehalf,
+        address owner,
         uint256 debt,
         uint256 shares
     ) internal {
-        _mintDebtShares(onBehalf, shares);
+        _mintDebtShares(owner, shares);
         bytes memory sendData = abi.encodeWithSelector(
             activeProvider.borrow.selector,
             debtAsset(),
@@ -403,9 +409,9 @@ contract Vault is ERC4626 {
         // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
         // assets are transfered and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
-        SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
+        SafeERC20.safeTransfer(_debtAsset, caller, debt);
 
-        emit Borrow(caller, onBehalf, debt, shares);
+        emit Borrow(caller, owner, debt, shares);
     }
 
     /**
@@ -413,7 +419,7 @@ contract Vault is ERC4626 {
      */
     function _payback(
         address caller,
-        address onBehalf,
+        address owner,
         uint256 debt,
         uint256 shares
     ) internal {
@@ -425,17 +431,15 @@ contract Vault is ERC4626 {
         // assets are transfered and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
         SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
-        // address spender = activeProvider.approveOperator(debtAsset());
-        // SafeERC20.safeApprove(_debtAsset, spender, debt);
         bytes memory sendData = abi.encodeWithSelector(
             activeProvider.payback.selector,
             debtAsset(),
             debt
         );
         _providerCall(sendData, "Payback: call failed");
-        _burnDebtShares(onBehalf, shares);
+        _burnDebtShares(owner, shares);
 
-        emit Payback(caller, onBehalf, debt, shares);
+        emit Payback(caller, owner, debt, shares);
     }
 
     function _mintDebtShares(address account, uint256 amount) internal {

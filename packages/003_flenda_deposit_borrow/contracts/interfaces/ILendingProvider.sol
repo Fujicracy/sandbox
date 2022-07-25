@@ -17,7 +17,7 @@ interface ILendingProvider {
   /**
   * @notice Performs deposit operation at lending provider on behalf caller.
   * @dev Requires that erc20-approval is handled by caller.
-  * @dev Requires that Native wrapping is hanlded by caller.
+  * @dev Requires that Native wrapping is handled by caller.
   * @param asset address.
   * @param amount amount integer. 
   */
@@ -40,7 +40,7 @@ interface ILendingProvider {
   /**
    * @notice Performs payback operation at lending provider on behalf caller.
    * @dev Requires that erc20-approval is handled by caller.
-   * @dev Requires that Native wrapping is hanlded by caller.
+   * @dev Requires that Native wrapping is handled by caller.
    * @param asset address.
    * @param amount amount integer.
    * @dev Check erc20-approval to lending provider prior to call.
