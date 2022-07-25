@@ -3,6 +3,7 @@ const fs = require("fs");
 
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-etherscan");
+require("hardhat-contract-sizer");
 
 if (!process.env.INFURA_ID) {
   throw "Please set INFURA_ID in ./packages/hardhat/.env";
@@ -30,6 +31,7 @@ module.exports = {
     localhost: {
       url: "http://localhost:8545",
       timeout: 200000,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : { mnemonic: mnemonic() },
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,

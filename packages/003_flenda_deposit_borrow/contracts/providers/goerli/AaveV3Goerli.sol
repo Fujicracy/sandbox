@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.9;
 
+import "../../interfaces/ILendingProvider.sol";
 import "../../interfaces/aaveV3/IAaveProtocolDataProvider.sol";
 import "../../interfaces/aaveV3/IPool.sol";
-import "../../interfaces/IUnwrapper.sol";
-import "../../interfaces/IWETH.sol";
-import "../../libraries/UniversalERC20.sol";
+// import "../../interfaces/IUnwrapper.sol";
+// import "../../interfaces/IWETH.sol";
+// import "../../libraries/UniversalERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title AaveV3 Lending Provider.
  * @author fujidao Labs
- * @notice This library allows interaction with AaveV3.
+ * @notice This contract allows interaction with AaveV3.
  */
-library AaveV3Goerli {
-  using UniversalERC20 for IERC20;
+contract AaveV3Goerli is ILendingProvider {
+  // using UniversalERC20 for IERC20;
 
   function _getNativeAddr() internal pure returns (address) {
     return 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -39,77 +40,73 @@ library AaveV3Goerli {
   /**
   * @notice See {ILendingProvider} 
   */
-  function approveOperator(address) external pure returns(address operator) {
+  function approveOperator(address) external override pure returns(address operator) {
     operator = address(_getPool());
   }
 
   /**
   * @notice See {ILendingProvider} 
   */
-  function deposit(address asset, uint256 amount) external returns(bool success) {
+  function deposit(address asset, uint256 amount) external override returns(bool success) {
     IPool aave = _getPool();
-    bool isNative = asset == _getNativeAddr();
-    address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
+    // bool isNative = asset == _getNativeAddr();
+    // address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
     // convert Native to WrappedNative
-    if (isNative) IWETH(_tokenAddr).deposit{ value: amount }();
-    IERC20(_tokenAddr).univApprove(address(aave), amount);
+    // if (isNative) IWETH(_tokenAddr).deposit{ value: amount }();
+    // IERC20(_tokenAddr).univApprove(address(aave), amount);
 
-    aave.supply(_tokenAddr, amount, address(this), 0);
+    aave.supply(asset, amount, address(this), 0);
 
-    aave.setUserUseReserveAsCollateral(_tokenAddr, true);
+    aave.setUserUseReserveAsCollateral(asset, true);
     success = true;
   }
 
   /**
    * @notice See {ILendingProvider}  
    */
-  function borrow(address asset, uint256 amount) external returns(bool success) {
+  function borrow(address asset, uint256 amount) external override returns(bool success) {
     IPool aave = _getPool();
-    bool isNative = asset == _getNativeAddr();
-    address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
-
-    aave.borrow(_tokenAddr, amount, 2, 0, address(this));
-
+    // bool isNative = asset == _getNativeAddr();
+    // address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
+    aave.borrow(asset, amount, 2, 0, address(this));
     // convert Native to WrappedNative
-    if (isNative) {
-      address unwrapper = _getUnwrapper();
-      IERC20(_tokenAddr).univTransfer(payable(unwrapper), amount);
-      IUnwrapper(unwrapper).withdraw(amount);
-    }
+    // if (isNative) {
+    //   address unwrapper = _getUnwrapper();
+    //   IERC20(_tokenAddr).univTransfer(payable(unwrapper), amount);
+    //   IUnwrapper(unwrapper).withdraw(amount);
+    // }
     success = true;
   }
 
   /**
    * @notice See {ILendingProvider} 
    */
-  function withdraw(address asset, uint256 amount) external returns(bool success) {
+  function withdraw(address asset, uint256 amount) external override returns(bool success) {
     IPool aave = _getPool();
-    bool isNative = asset == _getNativeAddr();
-    address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
-
-    aave.withdraw(_tokenAddr, amount, address(this));
-
+    // bool isNative = asset == _getNativeAddr();
+    // address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
+    aave.withdraw(asset, amount, address(this));
     // convert Native to WrappedNative
-    if (isNative) {
-      address unwrapper = _getUnwrapper();
-      IERC20(_tokenAddr).univTransfer(payable(unwrapper), amount);
-      IUnwrapper(unwrapper).withdraw(amount);
-    }
+    // if (isNative) {
+    //   address unwrapper = _getUnwrapper();
+    //   IERC20(_tokenAddr).univTransfer(payable(unwrapper), amount);
+    //   IUnwrapper(unwrapper).withdraw(amount);
+    // }
     success = true;
   }
 
   /**
    * @notice See {ILendingProvider} 
    */
-  function payback(address asset, uint256 amount) external  returns(bool success) {
+  function payback(address asset, uint256 amount) external override returns(bool success) {
     IPool aave = _getPool();
-    bool isNative = asset == _getNativeAddr();
-    address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
+    // bool isNative = asset == _getNativeAddr();
+    // address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
     // convert Native to WrappedNative
-    if (isNative) IWETH(_tokenAddr).deposit{ value: amount }();
-    IERC20(_tokenAddr).univApprove(address(aave), amount);
+    // if (isNative) IWETH(_tokenAddr).deposit{ value: amount }();
+    // IERC20(_tokenAddr).univApprove(address(aave), amount);
 
-    aave.repay(_tokenAddr, amount, 2, address(this));
+    aave.repay(asset, amount, 2, address(this));
 
     success = true;
   }
@@ -117,7 +114,7 @@ library AaveV3Goerli {
   /**
    * @notice See {ILendingProvider} 
    */
-  function getDepositRateFor(address asset) external view returns (uint256 rate) {
+  function getDepositRateFor(address asset) external override view returns (uint256 rate) {
     IPool aaveData = _getPool();
     IPool.ReserveData memory rdata = aaveData.getReserveData(
       asset == _getNativeAddr() ? _getWrappedNativeAddr() : asset
@@ -128,7 +125,7 @@ library AaveV3Goerli {
   /**
    * @notice See {ILendingProvider}  
    */
-  function getBorrowRateFor(address asset) external view returns (uint256 rate) {
+  function getBorrowRateFor(address asset) external override view returns (uint256 rate) {
     IPool aaveData = _getPool();
     IPool.ReserveData memory rdata = aaveData.getReserveData(
       asset == _getNativeAddr() ? _getWrappedNativeAddr() : asset
@@ -139,7 +136,7 @@ library AaveV3Goerli {
   /**
    * @notice See {ILendingProvider} 
    */
-  function getDepositBalance(address asset, address user) external view returns (uint256 balance){
+  function getDepositBalance(address asset, address user) external override view returns (uint256 balance){
     IAaveProtocolDataProvider aaveData = _getAaveProtocolDataProvider();
     bool isNative = asset == _getNativeAddr();
     address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
@@ -149,7 +146,7 @@ library AaveV3Goerli {
   /**
    * @notice See {ILendingProvider} 
    */
-  function getBorrowBalance(address asset, address user) external view returns (uint256 balance) {
+  function getBorrowBalance(address asset, address user) external override view returns (uint256 balance) {
     IAaveProtocolDataProvider aaveData = _getAaveProtocolDataProvider();
     bool isNative = asset == _getNativeAddr();
     address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;

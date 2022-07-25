@@ -4,9 +4,13 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import "./interfaces/ILendingProvider.sol";
 import "./interfaces/IFujiOracle.sol";
+import "./interfaces/IWETH.sol";
+
+import "hardhat/console.sol";
 
 contract Vault is ERC4626 {
     using Math for uint256;
+    using Address for address;
 
     struct Factor {
         uint64 num;
@@ -27,6 +31,8 @@ contract Vault is ERC4626 {
         uint256 shares
     );
 
+    IWETH public immutable WRAPPED_NATIVE;
+
     IERC20Metadata internal immutable _debtAsset;
 
     uint256 public debtSharesSupply;
@@ -42,24 +48,97 @@ contract Vault is ERC4626 {
 
     Factor public liqRatio;
 
+    /**
+     * @dev  Handle direct sending of native-token.
+     */
+    receive() external payable {
+        IWETH(WRAPPED_NATIVE).deposit{value: msg.value}();
+    }
+
     constructor(
         address asset,
         address debtAsset_,
         address fujiOracle,
-        Factor memory maxLtv_,
-        Factor memory liqRatio_
+        address wrappedNative_
     ) ERC4626(IERC20Metadata(asset)) ERC20("Flenda Vault Shares", "fVshs") {
         _debtAsset = IERC20Metadata(debtAsset_);
         oracle = IFujiOracle(fujiOracle);
-        maxLtv = maxLtv_;
-        liqRatio = liqRatio_;
+        WRAPPED_NATIVE = IWETH(wrappedNative_);
+        maxLtv.num = 75;
+        maxLtv.denum = 100;
+        liqRatio.num = 80;
+        liqRatio.denum = 100;
     }
 
     ///////////////////////////////////////////////
     /// Asset management overrides from ERC4626 ///
     ///////////////////////////////////////////////
 
-    /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4262-deposit}. */
+    /** @dev Overriden to check assets balance through providers {IERC4262-totalAssets}. */
+    function totalAssets() public view virtual override returns (uint256) {
+        return _computeTotalAssets();
+    }
+
+    /** @dev Overriden to check assets locked by debt {IERC4626-maxWithdraw}. */
+    function maxWithdraw(address owner) public view override returns (uint256) {
+        return _computeFreeAssets(owner);
+    }
+
+    /** @dev Overriden to check shares locked by debt {IERC4626-maxRedeem}. */
+    function maxRedeem(address owner) public view override returns (uint256) {
+        return _convertToShares(_computeFreeAssets(owner), Math.Rounding.Down);
+    }
+
+    /** @dev Overriden to perform withdraw checks {IERC4626-withdraw}. */
+    function withdraw(
+        uint256 assets,
+        address receiver,
+        address owner
+    ) public override returns (uint256) {
+        // TODO Need to add security to onBehalf !!!!!!!!
+        require(assets > 0, "Wrong input");
+        require(assets <= maxWithdraw(owner), "Withdraw more than max");
+
+        uint256 shares = previewWithdraw(assets);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+
+        return shares;
+    }
+
+    /** @dev Overriden See {IERC4626-redeem}. */
+    function redeem(
+        uint256 shares,
+        address receiver,
+        address onBehalf
+    ) public override returns (uint256) {
+        require(shares <= maxRedeem(onBehalf), "Redeem more than max");
+
+        uint256 assets = previewRedeem(shares);
+        _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
+
+        return assets;
+    }
+
+    /// Token transfer hooks.
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal view override {
+        to;
+        if (from != address(0)) {
+            require(amount <= maxRedeem(from), "Transfer more than max");
+        }
+    }
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal pure override {}
+
+    /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4626-deposit}. */
     function _deposit(
         address caller,
         address receiver,
@@ -80,41 +159,20 @@ contract Vault is ERC4626 {
             address(this),
             assets
         );
-        address spender = activeProvider.approveOperator(asset);
-        SafeERC20.safeApprove(IERC20(asset), spender, assets);
-        activeProvider.deposit(asset, assets);
+        // address spender = activeProvider.approveOperator(asset);
+        // SafeERC20.safeApprove(IERC20(asset), spender, assets);
+        bytes memory sendData = abi.encodeWithSelector(
+            activeProvider.deposit.selector,
+            asset,
+            assets
+        );
+        _providerCall(sendData, "Deposit: call failed");
         _mint(receiver, shares);
 
         emit Deposit(caller, receiver, assets, shares);
     }
 
-    /** @dev Overriden to perform withdraw checks {IERC4262-withdraw}. */
-    function withdraw(
-        uint256 assets,
-        address receiver,
-        address onBehalf
-    ) public override returns (uint256) {
-        // TODO Need to add security to onBehalf !!!!!!!!
-        require(assets > 0, "Wrong input");
-        require(assets <= maxWithdraw(onBehalf), "Withdraw more than max");
-
-        uint256 shares = previewWithdraw(assets);
-        _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
-
-        return shares;
-    }
-
-    /** @dev Overriden to check assets locked by debt {IERC4262-maxWithdraw}. */
-    function maxWithdraw(address owner) public view override returns (uint256) {
-        return _computeFreeAssets(owner);
-    }
-
-    /** @dev Overriden to check shares locked by debt {IERC4262-maxRedeem}. */
-    function maxRedeem(address owner) public view override returns (uint256) {
-        return _convertToShares(_computeFreeAssets(owner), Math.Rounding.Down);
-    }
-
-    /** @dev Overriden to perform _withdraw adding flow at lending provider {IERC4262-withdraw}. */
+    /** @dev Overriden to perform _withdraw adding flow at lending provider {IERC4626-withdraw}. */
     function _withdraw(
         address caller,
         address receiver,
@@ -130,24 +188,15 @@ contract Vault is ERC4626 {
         // shares are burned and after the assets are transfered, which is a valid state.
         _burn(owner, shares);
         address asset = asset();
-        activeProvider.withdraw(asset, assets);
+        bytes memory sendData = abi.encodeWithSelector(
+            activeProvider.withdraw.selector,
+            asset,
+            assets
+        );
+        _providerCall(sendData, "Withdraw: call failed");
         SafeERC20.safeTransfer(IERC20(asset), receiver, assets);
 
         emit Withdraw(caller, receiver, owner, assets, shares);
-    }
-
-    /** @dev Overriden See {IERC4262-redeem}. */
-    function redeem(
-        uint256 shares,
-        address receiver,
-        address onBehalf
-    ) public override returns (uint256) {
-        require(shares <= maxRedeem(onBehalf), "Redeem more than max");
-
-        uint256 assets = previewRedeem(shares);
-        _withdraw(_msgSender(), receiver, onBehalf, assets, shares);
-
-        return assets;
     }
 
     ///////////////////////////////////////////////////////////
@@ -159,17 +208,17 @@ contract Vault is ERC4626 {
         return decimals();
     }
 
-    /** @dev Based on {IERC4262-asset}. */
+    /** @dev Based on {IERC4626-asset}. */
     function debtAsset() public view returns (address) {
         return address(_debtAsset);
     }
 
-    /** @dev Based on {IERC4262-totalAssets}. */
+    /** @dev Based on {IERC4626-totalAssets}. */
     function totalDebt() public view returns (uint256) {
         return _computeTotalDebt();
     }
 
-    /** @dev Based on {IERC4262-convertToShares}. */
+    /** @dev Based on {IERC4626-convertToShares}. */
     function convertDebtToShares(uint256 debt)
         public
         view
@@ -178,17 +227,17 @@ contract Vault is ERC4626 {
         return _convertDebtToShares(debt, Math.Rounding.Down);
     }
 
-    /** @dev Based on {IERC4262-convertToAssets}. */
+    /** @dev Based on {IERC4626-convertToAssets}. */
     function convertToDebt(uint256 shares) public view returns (uint256 debt) {
         return _convertToDebt(shares, Math.Rounding.Down);
     }
 
-    /** @dev Based on {IERC4262-maxDeposit}. */
+    /** @dev Based on {IERC4626-maxDeposit}. */
     function maxBorrow(address borrower) public view returns (uint256) {
         return _computeMaxBorrow(borrower);
     }
 
-    /** @dev Based on {IERC4262-deposit}. */
+    /** @dev Based on {IERC4626-deposit}. */
     function borrow(uint256 debt, address onBehalf) public returns (uint256) {
         // TODO Need to add security to onBehalf !!!!!!!!
         require(debt > 0, "Wrong input");
@@ -221,9 +270,22 @@ contract Vault is ERC4626 {
         return shares;
     }
 
+    function _computeTotalAssets() internal view returns (uint256 assets) {
+        address asset = asset();
+        uint256 pLenght = _providers.length;
+        for (uint256 i = 0; i < pLenght; ) {
+            assets += _providers[i].getDepositBalance(asset, address(this));
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function _computeTotalDebt() internal view returns (uint256 debt) {
-        for (uint256 i = 0; i < _providers.length; ) {
-            debt += _providers[i].getBorrowBalance(debtAsset(), address(this));
+        address debtAsset_ = debtAsset();
+        uint256 pLenght = _providers.length;
+        for (uint256 i = 0; i < pLenght; ) {
+            debt += _providers[i].getBorrowBalance(debtAsset_, address(this));
             unchecked {
                 ++i;
             }
@@ -256,9 +318,9 @@ contract Vault is ERC4626 {
         returns (uint256 freeAssets)
     {
         uint256 debtShares = _debtShares[owner];
-        bool hasDebtShares = _debtShares[owner] > 0 ? true : false;
-        if (hasDebtShares) {
-            return _convertToAssets(balanceOf(owner), Math.Rounding.Down);
+        bool noDebt = debtShares > 0 ? false : true;
+        if (noDebt) {
+            freeAssets = _convertToAssets(balanceOf(owner), Math.Rounding.Down);
         } else {
             uint256 debt = convertToDebt(debtShares);
             uint256 price = oracle.getPriceOf(
@@ -327,7 +389,12 @@ contract Vault is ERC4626 {
         uint256 shares
     ) internal {
         _mintDebtShares(onBehalf, shares);
-        activeProvider.borrow(debtAsset(), debt);
+        bytes memory sendData = abi.encodeWithSelector(
+            activeProvider.borrow.selector,
+            debtAsset(),
+            debt
+        );
+        _providerCall(sendData, "Borrow: call failed");
 
         // If _asset is ERC777, `transferFrom` can trigger a reenterancy BEFORE the transfer happens through the
         // `tokensToSend` hook. On the other hand, the `tokenReceived` hook, that is triggered after the transfer,
@@ -358,10 +425,14 @@ contract Vault is ERC4626 {
         // assets are transfered and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
         SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
-        address spender = activeProvider.approveOperator(debtAsset());
-        SafeERC20.safeApprove(_debtAsset, spender, debt);
-
-        activeProvider.payback(debtAsset(), debt);
+        // address spender = activeProvider.approveOperator(debtAsset());
+        // SafeERC20.safeApprove(_debtAsset, spender, debt);
+        bytes memory sendData = abi.encodeWithSelector(
+            activeProvider.payback.selector,
+            debtAsset(),
+            debt
+        );
+        _providerCall(sendData, "Payback: call failed");
         _burnDebtShares(onBehalf, shares);
 
         emit Payback(caller, onBehalf, debt, shares);
@@ -383,6 +454,17 @@ contract Vault is ERC4626 {
         debtSharesSupply -= amount;
     }
 
+    function _providerCall(bytes memory data, string memory errorMsg) private {
+        bytes memory returndata = address(activeProvider).functionDelegateCall(
+            data,
+            errorMsg
+        );
+        require(
+            abi.decode(returndata, (bool)),
+            "LendingProvider: operation did not succeed"
+        );
+    }
+
     /// Public getters.
 
     function getProviders()
@@ -391,27 +473,6 @@ contract Vault is ERC4626 {
         returns (ILendingProvider[] memory list)
     {
         list = _providers;
-    }
-
-    /// Token transfer hooks.
-
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal view override {
-        to;
-        require(amount <= maxRedeem(from), "Transfer more than max");
-    }
-
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal pure override {
-        from;
-        to;
-        amount;
     }
 
     ///////////////////////////
@@ -435,7 +496,11 @@ contract Vault is ERC4626 {
     function setActiveProvider(ILendingProvider activeProvider_) external {
         // TODO needs admin restriction
         // TODO needs input validation
+        if (address(activeProvider) != address(0)) {
+            _removeMaxAllowances(activeProvider);
+        }
         activeProvider = activeProvider_;
+        _setMaxAllowances(activeProvider);
         // TODO needs to emit event.
     }
 
@@ -451,5 +516,29 @@ contract Vault is ERC4626 {
         // TODO needs input validation
         liqRatio = liqRatio_;
         // TODO needs to emit event.
+    }
+
+    function _setMaxAllowances(ILendingProvider activeProvider_) internal {
+        // max approve asset and debtAsset for active
+        address asset = asset();
+        address spender = activeProvider_.approveOperator(asset);
+        SafeERC20.safeApprove(IERC20(asset), spender, type(uint256).max);
+
+        address debt = debtAsset();
+        spender = activeProvider_.approveOperator(debt);
+        SafeERC20.safeApprove(IERC20(debt), spender, type(uint256).max);
+    }
+
+    function _removeMaxAllowances(ILendingProvider oldActiveProvider_)
+        internal
+    {
+        // remove max approve asset and debtAsset
+        address asset = asset();
+        address spender = oldActiveProvider_.approveOperator(asset);
+        SafeERC20.safeApprove(IERC20(asset), spender, 0);
+
+        address debt = debtAsset();
+        spender = oldActiveProvider_.approveOperator(debt);
+        SafeERC20.safeApprove(IERC20(debt), spender, 0);
     }
 }

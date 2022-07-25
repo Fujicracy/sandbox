@@ -12,36 +12,40 @@ interface ILendingProvider {
   * @notice Returns the operator address that requires ERC20-approval for deposits.
   * @param asset address.
   */
-  function approveOperator(address asset) external payable returns(address operator);
+  function approveOperator(address asset) external returns(address operator);
 
   /**
   * @notice Performs deposit operation at lending provider on behalf caller.
+  * @dev Requires that erc20-approval is handled by caller.
+  * @dev Requires that Native wrapping is hanlded by caller.
   * @param asset address.
   * @param amount amount integer. 
   */
-  function deposit(address asset, uint256 amount) external payable returns(bool success);
+  function deposit(address asset, uint256 amount) external returns(bool success);
 
   /**
    * @notice Performs borrow operation at lending provider on behalf caller.
    * @param asset address.
    * @param amount amount integer. 
    */
-  function borrow(address asset, uint256 amount) external payable returns(bool success);
+  function borrow(address asset, uint256 amount) external returns(bool success);
 
   /**
    * @notice Performs withdraw operation at lending provider on behalf caller.
    * @param asset address.
    * @param amount amount integer. 
    */
-  function withdraw(address asset, uint256 amount) external payable returns(bool success);
+  function withdraw(address asset, uint256 amount) external returns(bool success);
 
   /**
    * @notice Performs payback operation at lending provider on behalf caller.
+   * @dev Requires that erc20-approval is handled by caller.
+   * @dev Requires that Native wrapping is hanlded by caller.
    * @param asset address.
    * @param amount amount integer.
    * @dev Check erc20-approval to lending provider prior to call.
    */
-  function payback(address asset, uint256 amount) external payable returns(bool success);
+  function payback(address asset, uint256 amount) external returns(bool success);
 
   /**
    * @notice Returns the latest SUPPLY annual percent rate (APR) at lending provider.
