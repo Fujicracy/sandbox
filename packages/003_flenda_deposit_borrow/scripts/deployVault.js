@@ -28,12 +28,10 @@ const main = async () => {
   await vault.deployed();
   console.log("Vault deployed to:", vault.address);
   console.log("...setting up Vault providers");
-  // let tx = await vault.setProviders([FlendaDeployments[CHAIN_NAME].aaveV3]);
-  let tx = await vault.setProviders(["0x270B7341C18b07dCab42D25a4f3523F5D76e5988"]);
+  let tx = await vault.setProviders([FlendaDeployments[CHAIN_NAME].aaveV3]);
   tx.wait();
   console.log("...setting up Vault activeProvider");
-  // tx = await vault.setActiveProvider(FlendaDeployments[CHAIN_NAME].aaveV3);
-  tx = await vault.setActiveProvider("0x270B7341C18b07dCab42D25a4f3523F5D76e5988");
+  tx = await vault.setActiveProvider(FlendaDeployments[CHAIN_NAME].aaveV3);
   tx.wait();
   console.log("Vault set-up complete!");
 }
