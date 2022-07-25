@@ -13,3 +13,6 @@
 [submodule "packages/004_xfuji_forge/lib/solmate"]
 	path = packages/004_xfuji_forge/lib/solmate
 	url = https://github.com/transmissions11/solmate
+[submodule "packages/004_xfuji_forge/lib/nxtp"]
+	path = packages/004_xfuji_forge/lib/nxtp
+	url = https://github.com/connext/nxtp
