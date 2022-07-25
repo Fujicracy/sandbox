@@ -4,15 +4,20 @@ pragma solidity ^0.8.9;
 import "./interfaces/IVault.sol";
 import "./interfaces/IRouter.sol";
 import "./helpers/PeripheryPayments.sol";
+import "./interfaces/IConnext.sol";
 
-// TODO inherit from SelfPermit, Multicall, PeripheryPayments
+// TODO inherit from SelfPermit, Multicall
 // for additional functionalitites
 // ref: https://github.com/fei-protocol/ERC4626/blob/main/src/ERC4626RouterBase.sol
 
 contract Router is IRouter, PeripheryPayments {
+  IConnext public connext;
+
   mapping(uint256 => address) public routerByChainId;
 
-  constructor(IWETH9 weth) PeripheryPayments(weth) {}
+  constructor(IWETH9 weth, IConnext connext_) PeripheryPayments(weth) {
+    connext = connext_;
+  }
 
   function depositAndBorrow(
     IVault vault,
