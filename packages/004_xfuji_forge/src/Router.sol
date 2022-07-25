@@ -74,4 +74,10 @@ contract Router is IRouter, PeripheryPayments {
   // check msg.sender of xcall from the origin domain: it has to be another router
   // depositTo() or withdrawFrom() or borrowFrom() or paybackTo()
   // }
+
+  function setRouter(uint32 domain, address router) external {
+    // TODO only owner
+    // TODO verify params
+    routerByDomain[domain] = router;
+  }
 }
