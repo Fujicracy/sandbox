@@ -49,15 +49,10 @@ contract AaveV3Rinkeby is ILendingProvider {
    */
   function deposit(address asset, uint256 amount) external returns (bool success) {
     IPool aave = _getPool();
-    bool isNative = asset == _getNativeAddr();
-    address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
-    // convert Native to WrappedNative
-    if (isNative) IWETH(_tokenAddr).deposit{ value: amount }();
-    IERC20(_tokenAddr).univApprove(address(aave), amount);
 
-    aave.supply(_tokenAddr, amount, address(this), 0);
+    aave.supply(asset, amount, address(this), 0);
 
-    aave.setUserUseReserveAsCollateral(_tokenAddr, true);
+    aave.setUserUseReserveAsCollateral(asset, true);
     success = true;
   }
 
