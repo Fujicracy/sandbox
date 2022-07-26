@@ -58,8 +58,6 @@ contract Vault is ERC4626 {
     liqRatio = liqRatio_;
 
     router = IRouter(router_);
-    SafeERC20.safeApprove(IERC20(asset_), router_, type(uint256).max);
-    SafeERC20.safeApprove(IERC20(debtAsset_), router_, type(uint256).max);
   }
 
   ///////////////////////////////////////////////

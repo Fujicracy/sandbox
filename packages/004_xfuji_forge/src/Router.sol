@@ -38,6 +38,11 @@ contract Router is IRouter, PeripheryPayments {
     executor = connext.executor();
   }
 
+  function approveVault(IVault vault) external {
+    // TODO onlyOwner
+    approve(ERC20(vault.asset()), address(vault), type(uint256).max);
+  }
+
   function depositAndBorrow(
     IVault vault,
     uint256 depositAmount,
@@ -47,6 +52,22 @@ contract Router is IRouter, PeripheryPayments {
 
     vault.deposit(depositAmount, msg.sender);
     vault.borrow(borrowAmount, msg.sender, msg.sender);
+  }
+
+  function depositToVault(
+    IVault vault,
+    uint256 amount
+  ) external {
+    pullToken(ERC20(vault.asset()), amount, address(this));
+
+    vault.deposit(amount, msg.sender);
+  }
+
+  function withdrawFromVault(
+    IVault vault,
+    uint256 amount
+  ) external {
+    vault.withdraw(amount, msg.sender, msg.sender);
   }
 
   function depositETHAndBorrow(IVault vault, uint256 borrowAmount) external payable {
