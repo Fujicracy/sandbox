@@ -8,6 +8,7 @@ import {DSTestPlus} from "./utils/DSTestPlus.sol";
 import {Vault, ERC20} from "../src/Vault.sol";
 import {Router, IWETH9} from "../src/Router.sol";
 import {AaveV3Goerli} from "../src/providers/goerli/AaveV3Goerli.sol";
+import {AaveV3Rinkeby} from "../src/providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
 
 contract VaultTest is DSTestPlus {
@@ -31,8 +32,8 @@ contract VaultTest is DSTestPlus {
   function setUp() public {
     goerliFork = vm.createFork("goerli");
     rinkebyFork = vm.createFork("rinkeby");
-    /*_setUpRinkeby();*/
-    _setUpGoerli();
+    _setUpRinkeby();
+    /*_setUpGoerli();*/
   }
 
   function _setUpGoerli() internal {
@@ -71,7 +72,7 @@ contract VaultTest is DSTestPlus {
     debtAsset = 0xb18d016cDD2d9439A19f15633005A6b2cd6Aa774; // usdc
     oracle = 0xD7E3AE6f48A1D442069b32a5Aa6e315B111B992C;
 
-    aaveV3 = new AaveV3Goerli();
+    aaveV3 = new AaveV3Rinkeby();
     router = new Router(weth, connextHandler);
 
     vault = new Vault(

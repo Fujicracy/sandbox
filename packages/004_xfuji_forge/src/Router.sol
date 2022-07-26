@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.9;
 
+import "nxtp/core/connext/libraries/LibConnextStorage.sol";
 import "nxtp/core/connext/interfaces/IConnextHandler.sol";
 import "nxtp/core/connext/interfaces/IExecutor.sol";
 import "./interfaces/IVault.sol";
@@ -54,19 +55,13 @@ contract Router is IRouter, PeripheryPayments {
     vault.borrow(borrowAmount, msg.sender, msg.sender);
   }
 
-  function depositToVault(
-    IVault vault,
-    uint256 amount
-  ) external {
+  function depositToVault(IVault vault, uint256 amount) external {
     pullToken(ERC20(vault.asset()), amount, address(this));
 
     vault.deposit(amount, msg.sender);
   }
 
-  function withdrawFromVault(
-    IVault vault,
-    uint256 amount
-  ) external {
+  function withdrawFromVault(IVault vault, uint256 amount) external {
     vault.withdraw(amount, msg.sender, msg.sender);
   }
 
@@ -86,15 +81,66 @@ contract Router is IRouter, PeripheryPayments {
     vaultTo.deposit(amount, msg.sender);
   }
 
+  function bridgeDepositToVault(
+    address asset,
+    uint256 amount,
+    uint32 destDomain,
+    address destVault
+  ) external {
+    // verify destVault exists on destDomain?
+
+    uint32 originDomain = uint32(connext.domain());
+    pullToken(ERC20(asset), amount, address(this));
+    approve(ERC20(asset), address(connext), type(uint256).max);
+
+    bytes4 selector = bytes4(keccak256("authorizedBridgeCall(uint256,uint32,address,address)"));
+    bytes memory callData = abi.encodeWithSelector(
+      selector,
+      amount,
+      originDomain,
+      destVault,
+      msg.sender
+    );
+
+    CallParams memory callParams = CallParams({
+      to: routerByDomain[destDomain],
+      callData: callData,
+      originDomain: originDomain,
+      destinationDomain: destDomain,
+      agent: msg.sender, // address allowed to transaction on destination side in addition to relayers
+      recovery: msg.sender, // fallback address to send funds to if execution fails on destination side
+      forceSlow: true, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
+      receiveLocal: false, // option to receive the local Nomad-flavored asset instead of the adopted asset
+      callback: address(0), // this contract implements the callback
+      callbackFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
+      relayerFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
+      slippageTol: 9995 // tolerate .05% slippage
+    });
+
+    XCallArgs memory xcallArgs = XCallArgs({
+      params: callParams,
+      transactingAssetId: asset,
+      amount: amount
+    });
+
+    connext.xcall(xcallArgs);
+  }
+
   // Move deposit to another strategy on a different chain.
   // function teleportDeposit(...) external;
 
   // callable only from the bridge
-  // function authorizedBridgeCall(...) external {
-  // check origin domain of the source contract
-  // check msg.sender of xcall from the origin domain: it has to be another router
-  // depositTo() or withdrawFrom() or borrowFrom() or paybackTo()
-  // }
+  function authorizedBridgeCall(
+    uint256 amount,
+    uint32 originDomain,
+    address vault,
+    address onBehalfOf
+  ) external {
+    // TODO: add modifier onlyConnextExecutor
+    originDomain;
+
+    IVault(vault).deposit(amount, onBehalfOf);
+  }
 
   function setRouter(uint32 domain, address router) external {
     // TODO only owner
