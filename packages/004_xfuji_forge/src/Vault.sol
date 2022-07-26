@@ -2,12 +2,14 @@
 pragma solidity ^0.8.9;
 
 import "openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol";
+import "openzeppelin-contracts/contracts/utils/Address.sol";
 import "./interfaces/ILendingProvider.sol";
 import "./interfaces/IFujiOracle.sol";
 import "./interfaces/IRouter.sol";
 
 contract Vault is ERC4626 {
   using Math for uint256;
+  using Address for address;
 
   struct Factor {
     uint64 num;
@@ -111,7 +113,7 @@ contract Vault is ERC4626 {
     uint256 amount
   ) internal view override {
     to;
-    require(amount <= maxRedeem(from), "Transfer more than max");
+    if (from != address(0)) require(amount <= maxRedeem(from), "Transfer more than max");
   }
 
   /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4262-deposit}. */
@@ -124,9 +126,7 @@ contract Vault is ERC4626 {
     address asset = asset();
 
     SafeERC20.safeTransferFrom(IERC20(asset), caller, address(this), assets);
-
-    activeProvider.deposit(asset, assets);
-
+    _executeProviderAction(asset, assets, "deposit");
     _mint(receiver, shares);
 
     emit Deposit(caller, receiver, assets, shares);
@@ -140,10 +140,10 @@ contract Vault is ERC4626 {
     uint256 assets,
     uint256 shares
   ) internal override {
-    _burn(owner, shares);
-
     address asset = asset();
-    activeProvider.withdraw(asset, assets);
+
+    _burn(owner, shares);
+    _executeProviderAction(asset, assets, "withdraw");
     SafeERC20.safeTransfer(IERC20(asset), receiver, assets);
 
     emit Withdraw(caller, receiver, owner, assets, shares);
@@ -292,15 +292,17 @@ contract Vault is ERC4626 {
     address caller,
     address receiver,
     address owner,
-    uint256 debt,
+    uint256 assets,
     uint256 shares
   ) internal {
     _mintDebtShares(owner, shares);
-    activeProvider.borrow(debtAsset(), debt);
 
-    SafeERC20.safeTransferFrom(_debtAsset, receiver, address(this), debt);
+    address asset = debtAsset();
+    _executeProviderAction(asset, assets, "borrow");
 
-    emit Borrow(caller, owner, debt, shares);
+    SafeERC20.safeTransferFrom(IERC20(asset), receiver, address(this), assets);
+
+    emit Borrow(caller, owner, assets, shares);
   }
 
   /**
@@ -309,15 +311,17 @@ contract Vault is ERC4626 {
   function _payback(
     address caller,
     address owner,
-    uint256 debt,
+    uint256 assets,
     uint256 shares
   ) internal {
-    SafeERC20.safeTransferFrom(_debtAsset, caller, address(this), debt);
+    address asset = debtAsset();
+    SafeERC20.safeTransferFrom(IERC20(asset), caller, address(this), assets);
 
-    activeProvider.payback(debtAsset(), debt);
+    _executeProviderAction(asset, assets, "payback");
+
     _burnDebtShares(owner, shares);
 
-    emit Payback(caller, owner, debt, shares);
+    emit Payback(caller, owner, assets, shares);
   }
 
   function _mintDebtShares(address account, uint256 amount) internal {
@@ -334,6 +338,22 @@ contract Vault is ERC4626 {
       _debtShares[account] = accountBalance - amount;
     }
     debtSharesSupply -= amount;
+  }
+
+  function _executeProviderAction(
+    address asset,
+    uint256 assets,
+    string memory name
+  ) internal {
+    bytes memory data = abi.encodeWithSignature(
+      string(abi.encodePacked(name, "(address,uint256)")),
+      asset,
+      assets
+    );
+    address(activeProvider).functionDelegateCall(
+      data,
+      string(abi.encodePacked(name, ": delegate call failed"))
+    );
   }
 
   /// Public getters.
@@ -365,19 +385,10 @@ contract Vault is ERC4626 {
     // TODO needs input validation
     activeProvider = activeProvider_;
     // TODO needs to emit event.
-  }
-
-  function setMaxAllowances() external {
-    // TODO needs admin restriction
-    // TODO needs input validation
-    // max approve asset and debtAsset
     address asset = asset();
-    address spender = activeProvider.approvedOperator(asset);
-    SafeERC20.safeApprove(IERC20(asset), spender, type(uint256).max);
-
+    SafeERC20.safeApprove(IERC20(asset), activeProvider.approvedOperator(asset), type(uint256).max);
     address debt = debtAsset();
-    spender = activeProvider.approvedOperator(debt);
-    SafeERC20.safeApprove(IERC20(debt), spender, type(uint256).max);
+    SafeERC20.safeApprove(IERC20(debt), activeProvider.approvedOperator(debt), type(uint256).max);
   }
 
   function setMaxLtv(Factor calldata maxLtv_) external {

@@ -21,7 +21,7 @@ interface IVault is IERC4626 {
   function borrow(
     uint256 debt,
     address receiver,
-    address onBehalf
+    address owner
   ) external returns (uint256);
 
   /**
