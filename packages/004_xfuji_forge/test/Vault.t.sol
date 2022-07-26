@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {IConnextHandler} from "nxtp/core/connext/interfaces/IConnextHandler.sol";
 import {DSTestPlus} from "./utils/DSTestPlus.sol";
-import {Vault} from "../src/Vault.sol";
+import {Vault, ERC20} from "../src/Vault.sol";
 import {Router, IWETH9} from "../src/Router.sol";
 import {AaveV3Goerli} from "../src/providers/goerli/AaveV3Goerli.sol";
 import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
@@ -12,6 +12,9 @@ import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
 contract VaultTest is DSTestPlus {
   uint256 goerliFork;
   uint256 rinkebyFork;
+
+  Vault.Factor maxLtv = Vault.Factor(75, 100);
+  Vault.Factor liqRatio = Vault.Factor(5, 100);
 
   Vault public vault;
   Router public router;
@@ -33,8 +36,6 @@ contract VaultTest is DSTestPlus {
     aaveV3 = new AaveV3Goerli();
     router = new Router(weth, connextHandler);
 
-    Vault.Factor memory maxLtv = Vault.Factor(75, 100);
-    Vault.Factor memory liqRatio = Vault.Factor(5, 100);
     vault = new Vault(
       asset,
       debtAsset,
@@ -53,11 +54,11 @@ contract VaultTest is DSTestPlus {
     assertEq(address(vault.activeProvider()), address(aaveV3));
   }
 
-  function testDeposit() public {
+  function testDepositAndWithdraw() public {
     address userChainA = address(0xA);
     vm.label(address(userChainA), "userChainA");
 
-    uint256 amount = 1 ether;
+    uint256 amount = 2 ether;
     weth.deposit{ value: amount }();
     SafeTransferLib.safeTransferFrom(weth, address(this), userChainA, amount);
     assertEq(weth.balanceOf(userChainA), amount);
@@ -68,5 +69,7 @@ contract VaultTest is DSTestPlus {
     vault.deposit(amount, userChainA);
 
     assertEq(vault.balanceOf(userChainA), amount);
+    vault.withdraw(amount, userChainA, userChainA);
+    assertEq(vault.balanceOf(userChainA), 0);
   }
 }

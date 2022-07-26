@@ -66,6 +66,11 @@ contract Vault is ERC4626 {
   /// Asset management overrides from ERC4626 ///
   ///////////////////////////////////////////////
 
+  /** @dev Overriden to check assets locked in activeProvider {IERC4262-totalAssets}. */
+  function totalAssets() public view virtual override returns (uint256) {
+    return activeProvider.getDepositBalance(asset(), address(this));
+  }
+
   /** @dev Overriden to check assets locked by debt {IERC4262-maxWithdraw}. */
   function maxWithdraw(address owner) public view override returns (uint256) {
     return _computeFreeAssets(owner);
@@ -155,7 +160,7 @@ contract Vault is ERC4626 {
 
   /** @dev Inspired on {IERC20Metadata-decimals}. */
   function debtDecimals() public view returns (uint8) {
-    return decimals();
+    return _debtAsset.decimals();
   }
 
   /** @dev Based on {IERC4262-asset}. */
@@ -165,7 +170,7 @@ contract Vault is ERC4626 {
 
   /** @dev Based on {IERC4262-totalAssets}. */
   function totalDebt() public view returns (uint256) {
-    return _computeTotalDebt();
+    return activeProvider.getBorrowBalance(debtAsset(), address(this));
   }
 
   /** @dev Based on {IERC4262-convertToShares}. */
@@ -213,15 +218,6 @@ contract Vault is ERC4626 {
     return shares;
   }
 
-  function _computeTotalDebt() internal view returns (uint256 debt) {
-    for (uint256 i = 0; i < _providers.length; ) {
-      debt += _providers[i].getBorrowBalance(debtAsset(), address(this));
-      unchecked {
-        ++i;
-      }
-    }
-  }
-
   function _computeMaxBorrow(address borrower) internal view returns (uint256 max) {
     uint256 price = oracle.getPriceOf(debtAsset(), asset(), _debtAsset.decimals());
     uint256 assetShares = balanceOf(borrower);
@@ -236,16 +232,16 @@ contract Vault is ERC4626 {
 
   function _computeFreeAssets(address owner) internal view returns (uint256 freeAssets) {
     uint256 debtShares = _debtShares[owner];
-    bool hasDebtShares = _debtShares[owner] > 0 ? true : false;
-    if (hasDebtShares) {
-      return _convertToAssets(balanceOf(owner), Math.Rounding.Down);
+
+    // no debt
+    if (debtShares == 0) {
+      freeAssets = convertToAssets(balanceOf(owner));
     } else {
       uint256 debt = convertToDebt(debtShares);
       uint256 price = oracle.getPriceOf(asset(), debtAsset(), IERC20Metadata(asset()).decimals());
       uint256 lockedAssets = (debt * maxLtv.denum * price) /
         (maxLtv.num * 10**_debtAsset.decimals());
-      uint256 assetShares = balanceOf(owner);
-      uint256 assets = convertToAssets(assetShares);
+      uint256 assets = convertToAssets(balanceOf(owner));
 
       freeAssets = assets > lockedAssets ? assets - lockedAssets : 0;
     }
