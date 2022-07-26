@@ -3,6 +3,7 @@ pragma solidity ^0.8.9;
 
 import "../../interfaces/aaveV3/IAaveProtocolDataProvider.sol";
 import "../../interfaces/aaveV3/IPool.sol";
+import "../../interfaces/ILendingProvider.sol";
 import "../../interfaces/IUnwrapper.sol";
 import "../../interfaces/IWETH.sol";
 import "../../libraries/UniversalERC20.sol";
@@ -10,10 +11,10 @@ import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title AaveV3 Lending Provider.
- * @author fujidao Labs
- * @notice This library allows interaction with AaveV3.
+ * @author Fujidao Labs
+ * @notice Adapter for AaveV3.
  */
-library AaveV3Goerli {
+contract AaveV3Goerli is ILendingProvider {
   using UniversalERC20 for IERC20;
 
   function _getNativeAddr() internal pure returns (address) {
@@ -48,15 +49,10 @@ library AaveV3Goerli {
    */
   function deposit(address asset, uint256 amount) external returns (bool success) {
     IPool aave = _getPool();
-    bool isNative = asset == _getNativeAddr();
-    address _tokenAddr = isNative ? _getWrappedNativeAddr() : asset;
-    // convert Native to WrappedNative
-    if (isNative) IWETH(_tokenAddr).deposit{ value: amount }();
-    IERC20(_tokenAddr).univApprove(address(aave), amount);
 
-    aave.supply(_tokenAddr, amount, address(this), 0);
+    aave.supply(asset, amount, address(this), 0);
 
-    aave.setUserUseReserveAsCollateral(_tokenAddr, true);
+    aave.setUserUseReserveAsCollateral(asset, true);
     success = true;
   }
 

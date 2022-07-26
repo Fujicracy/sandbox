@@ -3,6 +3,7 @@ pragma solidity ^0.8.9;
 
 import "../../interfaces/aaveV3/IAaveProtocolDataProvider.sol";
 import "../../interfaces/aaveV3/IPool.sol";
+import "../../interfaces/ILendingProvider.sol";
 import "../../interfaces/IUnwrapper.sol";
 import "../../interfaces/IWETH.sol";
 import "../../libraries/UniversalERC20.sol";
@@ -10,10 +11,10 @@ import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title AaveV3 Lending Provider.
- * @author fujidao Labs
- * @notice This library allows interaction with AaveV3.
+ * @author Fujidao Labs
+ * @notice Adapter for AaveV3.
  */
-library AaveV3Rinkeby {
+contract AaveV3Rinkeby is ILendingProvider {
   using UniversalERC20 for IERC20;
 
   function _getNativeAddr() internal pure returns (address) {
