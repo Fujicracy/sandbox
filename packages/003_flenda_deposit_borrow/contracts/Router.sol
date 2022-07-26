@@ -33,7 +33,7 @@ contract Router {
     // Testnet only: dummy wallet that receives token dump during testing.
     address public DUMMY_WALLET = 0x3b51Bc41C9Eda453aa50b6Bc43D48e0795Ce52f2;
     // Testnet only: tesnet mapper for aave asset addresses at destination chain.
-    address public tesnetMapper;
+    ITestnetMapper public tesnetMapper;
 
     // A modifier for permissioning the callback.
     // Note: This is an important security consideration. Only the PromiseRouter (the
@@ -44,9 +44,18 @@ contract Router {
         _;
     }
 
-    constructor(IConnext _connext, address _promiseRouter) {
-        connext = _connext;
-        promiseRouter = _promiseRouter;
+    constructor(
+        IConnext connext_,
+        address promiseRouter_,
+        address connextTestToken_,
+        IVault vault_,
+        address tesnetMapper_
+    ) {
+        connext = connext_;
+        promiseRouter = promiseRouter_;
+        connextTestToken = connextTestToken_;
+        registerVault(vault_);
+        tesnetMapper = ITestnetMapper(tesnetMapper_);
     }
 
     function depositBorrow(
@@ -71,7 +80,10 @@ contract Router {
         _beforeTestnetHook(vault, debt);
 
         // Testnet only: disburseTestnet() needs to be called on dest chain since connext doesnt support bridging of Aave asset types.
-        address mapped = ITestnetMapper(tesnetMapper).getMapping(registeredVaults[vault].debtAsset, destDomain);
+        address mapped = tesnetMapper.getMapping(
+            registeredVaults[vault].debtAsset,
+            destDomain
+        );
         bytes memory callData = abi.encodeWithSelector(
             Router.disburseTestnet.selector,
             debt,
@@ -145,18 +157,23 @@ contract Router {
     /// Admin functions ///
     ///////////////////////
 
-    // Testnet only
+    // Testnet only: needed as argument to make xCalls at ConnextHandler
     function setConnextTestToken(address addr_) external {
         connextTestToken = addr_;
     }
 
-    function registerRouter(uint32 domain, address router) external {
+    // Testnet only: needed since connext doesnt support bridging of Aave specific asset types. 
+    function setTestnetMapper(address addr_) external {
+        tesnetMapper = ITestnetMapper(addr_);
+    }
+
+    function setRouter(uint32 domain, address router) external {
         // TODO SECURITY restrict this function
         routerByDomain[domain] = router;
         // TODO emit an event
     }
 
-    function registerVault(IVault vault) external {
+    function registerVault(IVault vault) public {
         // TODO SECURITY restrict this function
         VaultParams memory params;
         address asset = vault.asset();
@@ -173,6 +190,7 @@ contract Router {
         } catch {
             params.debtAsset = address(0);
         }
+        registeredVaults[vault] = params;
         // TODO emit an event
     }
 }

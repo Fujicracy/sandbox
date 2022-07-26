@@ -7,6 +7,9 @@ const connextData = {
     },
     PromiseRouter: {
       address: "0xC02530858cE0260a1c4f214CF2d5b7c4E5986485"
+    },
+    TestToken: {
+      address: "0x3FFc03F05D1869f493c7dbf913E636C6280e0ff9"
     }
   },
   goerli: {
@@ -16,7 +19,10 @@ const connextData = {
       address: "0x4cAA6358a3d9d1906B5DABDE60A626AAfD80186F",
     },
     PromiseRouter: {
-      address: "0xC02530858cE0260a1c4f214CF2d5b7c4E5986485"
+      address: "0xC02530858cE0260a1c4f214CF2d5b7c4E5986485",
+    },
+    TestToken: {
+      address: "0x26FE8a8f86511d678d031a022E48FfF41c6a3e3b"
     }
   }
 }
