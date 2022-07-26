@@ -66,22 +66,22 @@ contract Vault is ERC4626 {
   /// Asset management overrides from ERC4626 ///
   ///////////////////////////////////////////////
 
-  /** @dev Overriden to check assets locked in activeProvider {IERC4262-totalAssets}. */
+  /** @dev Overriden to check assets locked in activeProvider {IERC4626-totalAssets}. */
   function totalAssets() public view virtual override returns (uint256) {
     return activeProvider.getDepositBalance(asset(), address(this));
   }
 
-  /** @dev Overriden to check assets locked by debt {IERC4262-maxWithdraw}. */
+  /** @dev Overriden to check assets locked by debt {IERC4626-maxWithdraw}. */
   function maxWithdraw(address owner) public view override returns (uint256) {
     return _computeFreeAssets(owner);
   }
 
-  /** @dev Overriden to check shares locked by debt {IERC4262-maxRedeem}. */
+  /** @dev Overriden to check shares locked by debt {IERC4626-maxRedeem}. */
   function maxRedeem(address owner) public view override returns (uint256) {
     return _convertToShares(_computeFreeAssets(owner), Math.Rounding.Down);
   }
 
-  /** @dev Overriden to perform withdraw checks {IERC4262-withdraw}. */
+  /** @dev Overriden to perform withdraw checks {IERC4626-withdraw}. */
   function withdraw(
     uint256 assets,
     address receiver,
@@ -97,7 +97,7 @@ contract Vault is ERC4626 {
     return shares;
   }
 
-  /** @dev Overriden See {IERC4262-redeem}. */
+  /** @dev Overriden See {IERC4626-redeem}. */
   function redeem(
     uint256 shares,
     address receiver,
@@ -121,7 +121,7 @@ contract Vault is ERC4626 {
     if (from != address(0)) require(amount <= maxRedeem(from), "Transfer more than max");
   }
 
-  /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4262-deposit}. */
+  /** @dev Overriden to perform _deposit adding flow at lending provider {IERC4626-deposit}. */
   function _deposit(
     address caller,
     address receiver,
@@ -137,7 +137,7 @@ contract Vault is ERC4626 {
     emit Deposit(caller, receiver, assets, shares);
   }
 
-  /** @dev Overriden to perform _withdraw adding flow at lending provider {IERC4262-withdraw}. */
+  /** @dev Overriden to perform _withdraw adding flow at lending provider {IERC4626-withdraw}. */
   function _withdraw(
     address caller,
     address receiver,
@@ -163,32 +163,32 @@ contract Vault is ERC4626 {
     return _debtAsset.decimals();
   }
 
-  /** @dev Based on {IERC4262-asset}. */
+  /** @dev Based on {IERC4626-asset}. */
   function debtAsset() public view returns (address) {
     return address(_debtAsset);
   }
 
-  /** @dev Based on {IERC4262-totalAssets}. */
+  /** @dev Based on {IERC4626-totalAssets}. */
   function totalDebt() public view returns (uint256) {
     return activeProvider.getBorrowBalance(debtAsset(), address(this));
   }
 
-  /** @dev Based on {IERC4262-convertToShares}. */
+  /** @dev Based on {IERC4626-convertToShares}. */
   function convertDebtToShares(uint256 debt) public view returns (uint256 shares) {
     return _convertDebtToShares(debt, Math.Rounding.Down);
   }
 
-  /** @dev Based on {IERC4262-convertToAssets}. */
+  /** @dev Based on {IERC4626-convertToAssets}. */
   function convertToDebt(uint256 shares) public view returns (uint256 debt) {
     return _convertToDebt(shares, Math.Rounding.Down);
   }
 
-  /** @dev Based on {IERC4262-maxDeposit}. */
+  /** @dev Based on {IERC4626-maxDeposit}. */
   function maxBorrow(address borrower) public view returns (uint256) {
     return _computeMaxBorrow(borrower);
   }
 
-  /** @dev Based on {IERC4262-deposit}. */
+  /** @dev Based on {IERC4626-deposit}. */
   function borrow(
     uint256 debt,
     address receiver,
