@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.9;
 
+/**
+ * @title IConnextHandler interface stripped down version.
+ * @author fujidao Labs
+ */
 interface IConnext {
   // ============= Structs =============
 
@@ -49,6 +53,8 @@ interface IConnext {
     address transactingAssetId; // Could be adopted, local, or wrapped
     uint256 amount;
   }
+
+  function domain() external view returns (uint256);
 
   function xcall(XCallArgs calldata _args) external payable returns (bytes32);
 }

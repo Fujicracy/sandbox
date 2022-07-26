@@ -25,6 +25,7 @@ contract Vault is ERC4626 {
 
     event Borrow(
         address indexed caller,
+        address indexed receiver,
         address indexed owner,
         uint256 debt,
         uint256 shares
@@ -44,6 +45,9 @@ contract Vault is ERC4626 {
     uint256 public debtSharesSupply;
 
     mapping(address => uint256) internal _debtShares;
+
+    mapping(address => mapping(address => uint256)) public assetAllowances;
+    mapping(address => mapping(address => uint256)) public debtAllowances;
 
     ILendingProvider[] internal _providers;
     ILendingProvider public activeProvider;
@@ -244,13 +248,13 @@ contract Vault is ERC4626 {
     }
 
     /** @dev Based on {IERC4626-deposit}. */
-    function borrow(uint256 debt, address owner) public returns (uint256) {
-        // TODO Need to add security to onBehalf !!!!!!!!
+    function borrow(uint256 debt, address receiver, address owner) public returns (uint256) {
+        // TODO SECURITY need to create borrow-allowance from caller to owner!!!!!!!
         require(debt > 0, "Wrong input");
         require(debt <= maxBorrow(owner), "Not enough assets");
 
         uint256 shares = convertDebtToShares(debt);
-        _borrow(_msgSender(), owner, debt, shares);
+        _borrow(_msgSender(), receiver, owner, debt, shares);
 
         return shares;
     }
@@ -390,6 +394,7 @@ contract Vault is ERC4626 {
      */
     function _borrow(
         address caller,
+        address receiver,
         address owner,
         uint256 debt,
         uint256 shares
@@ -409,9 +414,9 @@ contract Vault is ERC4626 {
         // Conclusion: we need to do the transfer before we mint so that any reentrancy would happen before the
         // assets are transfered and before the shares are minted, which is a valid state.
         // slither-disable-next-line reentrancy-no-eth
-        SafeERC20.safeTransfer(_debtAsset, caller, debt);
+        SafeERC20.safeTransfer(_debtAsset, receiver, debt);
 
-        emit Borrow(caller, owner, debt, shares);
+        emit Borrow(caller, receiver, owner, debt, shares);
     }
 
     /**
@@ -484,21 +489,21 @@ contract Vault is ERC4626 {
     ///////////////////////////
 
     function setOracle(IFujiOracle newOracle) external {
-        // TODO needs admin restriction
+        // TODO SECURITY needs admin restriction
         // TODO needs input validation
         oracle = newOracle;
         // TODO needs to emit event.
     }
 
     function setProviders(ILendingProvider[] memory providers) external {
-        // TODO needs admin restriction
+        // TODO SECURITY needs admin restriction
         // TODO needs input validation
         _providers = providers;
         // TODO needs to emit event.
     }
 
     function setActiveProvider(ILendingProvider activeProvider_) external {
-        // TODO needs admin restriction
+        // TODO SECURITY needs admin restriction
         // TODO needs input validation
         if (address(activeProvider) != address(0)) {
             _removeMaxAllowances(activeProvider);
@@ -509,14 +514,14 @@ contract Vault is ERC4626 {
     }
 
     function setMaxLtv(Factor calldata maxLtv_) external {
-        // TODO needs admin restriction
+        // TODO SECURITY needs admin restriction
         // TODO needs input validation
         maxLtv = maxLtv_;
         // TODO needs to emit event.
     }
 
     function setLiqRatio(Factor calldata liqRatio_) external {
-        // TODO needs admin restriction
+        // TODO SECURITY needs admin restriction
         // TODO needs input validation
         liqRatio = liqRatio_;
         // TODO needs to emit event.

@@ -2,7 +2,7 @@ require("dotenv").config();
 const hre = require("hardhat");
 const fs = require("fs");
 
-const { connextData, aaveV3Data, FlendaDeployments } = require("./const");
+const { connextData, aaveV3Data, xFujiDeployments } = require("./const");
 
 if (!process.env.NETWORK) {
   throw "Please set NETWORK in ./packages/hardhat/.env";
@@ -21,17 +21,17 @@ const main = async () => {
   const vault = await Vault.deploy(
     asset,
     debtAsset,
-    FlendaDeployments[CHAIN_NAME].oracle,
+    xFujiDeployments[CHAIN_NAME].oracle,
     aaveV3Data[CHAIN_NAME].assets.weth
   );
 
   await vault.deployed();
   console.log("Vault deployed to:", vault.address);
   console.log("...setting up Vault providers");
-  let tx = await vault.setProviders([FlendaDeployments[CHAIN_NAME].aaveV3]);
+  let tx = await vault.setProviders([xFujiDeployments[CHAIN_NAME].aaveV3]);
   tx.wait();
   console.log("...setting up Vault activeProvider");
-  tx = await vault.setActiveProvider(FlendaDeployments[CHAIN_NAME].aaveV3);
+  tx = await vault.setActiveProvider(xFujiDeployments[CHAIN_NAME].aaveV3);
   tx.wait();
   console.log("Vault set-up complete!");
 }

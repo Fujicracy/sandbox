@@ -56,18 +56,20 @@ const mockOracleData = {
   }
 }
 
-const FlendaDeployments = {
+const xFujiDeployments = {
   goerli: {
     unwrapper: "0xBB73511B0099eF355AA580D0149AC4C679A0B805",
     aaveV3: "0xc5d5a86E9f752e241eAc96a0595E4Cd6adc05F5a",
     oracle: "0xD7E3AE6f48A1D442069b32a5Aa6e315B111B992C",
-    vault: "0x270B7341C18b07dCab42D25a4f3523F5D76e5988"
+    vault: "0x270B7341C18b07dCab42D25a4f3523F5D76e5988",
+    mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
   },
   rinkeby: {
     unwrapper: "0xBB73511B0099eF355AA580D0149AC4C679A0B805",
     aaveV3: "0xc5d5a86E9f752e241eAc96a0595E4Cd6adc05F5a",
     oracle: "0xD7E3AE6f48A1D442069b32a5Aa6e315B111B992C",
-    vault: "0xE156BB884b9a0A7a4CBC7842341e281933F83b87"
+    vault: "0xE156BB884b9a0A7a4CBC7842341e281933F83b87",
+    mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
   }
 }
 
@@ -75,5 +77,5 @@ module.exports = {
   connextData,
   aaveV3Data,
   mockOracleData,
-  FlendaDeployments
+  xFujiDeployments
 }
