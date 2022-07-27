@@ -23,8 +23,8 @@ contract Router {
 
     mapping(uint32 => address) public routerByDomain;
 
-    IConnext public immutable connext;
-    address public immutable promiseRouter;
+    IConnext public connext; // TODO SECURITY make immutable
+    address public promiseRouter; // TODO SECURITY make immutable
 
     mapping(IVault => VaultParams) public registeredVaults;
 
@@ -67,17 +67,22 @@ contract Router {
         _depositBorrow(vault, assets, debt, msg.sender, msg.sender, owner);
     }
 
-    function depositBorrowAndBridge(
+    function depositBorrowAndBridgeTestnet(
         IVault vault,
         uint256 assets,
         uint256 debt,
         address owner,
         uint32 destDomain
     ) external {
-        _depositBorrow(vault, assets, debt, msg.sender, address(this), owner);
+        // Testnet only: send testnet token to DUMMY_WALLET, mint collateral assets
+        // Required: since Connext doesnt support bridging of Aave asset types.
+        _beforeDepositBorrowTestnetHook(vault, assets);
 
-        // Testnet only: send borrowed assets to DUMMY_WALLET since connext doesnt support bridging of Aave asset types.
-        _beforeTestnetHook(vault, debt);
+        _depositBorrowTestnet(vault, assets, debt, address(this), owner); // Testnet only:
+
+        // Testnet only: send borrowed tokens to DUMMY_WALLET, and mint debt as testnet token
+        // Required: since Connext doesnt support bridging of Aave asset types.
+        _afterDepositBorrowTestnetHook(vault, debt);
 
         // Testnet only: disburseTestnet() needs to be called on dest chain since connext doesnt support bridging of Aave asset types.
         address mapped = tesnetMapper.getMapping(
@@ -111,7 +116,7 @@ contract Router {
         IConnext.XCallArgs memory xcallArgs = IConnext.XCallArgs({
             params: callParams,
             transactingAssetId: connextTestToken,
-            amount: 0
+            amount: debt
         });
 
         connext.xcall(xcallArgs);
@@ -138,13 +143,42 @@ contract Router {
         vault.borrow(debt, receiver, owner);
     }
 
-    // Testnet only: send borrowed assets to DUMMY_WALLET since connext doesnt support bridging of Aave specific asset types.
-    function _beforeTestnetHook(IVault vault, uint256 debt) internal {
-        address debtAsset = registeredVaults[vault].debtAsset;
-        SafeERC20.safeTransfer(IERC20(debtAsset), DUMMY_WALLET, debt);
+    function _depositBorrowTestnet(
+        IVault vault,
+        uint256 assets,
+        uint256 debt,
+        address receiver,
+        address owner
+    ) internal {
+        // TODO SECURITY permit operation for borrowing on-behalf the owner!!!!
+        address asset = registeredVaults[vault].asset;
+        require(asset != address(0), "Not registered!");
+        vault.deposit(assets, owner);
+        vault.borrow(debt, receiver, owner);
     }
 
-    // Testnet only: mint asset on destination chain since connext doesnt support bridging of Aave specific asset types.
+    // Testnet only: send testnet token to DUMMY_WALLET, mint collateral assets
+    // Required: since Connext doesn't support bridging of Aave asset types.
+    function _beforeDepositBorrowTestnetHook(IVault vault, uint256 assets)
+        internal
+    {
+        SafeERC20.safeTransfer(IERC20(connextTestToken), DUMMY_WALLET, assets); // Removing Connext Test Token
+        address asset = registeredVaults[vault].asset;
+        IERC20Mintable(asset).mint(address(this), assets); // Minting weth collateral accepted in AaveV3.
+    }
+
+    // Testnet only: send borrowed tokens to DUMMY_WALLET, and mint debt as testnet token
+    // Required: since Connext doesnt support bridging of Aave asset types.
+    function _afterDepositBorrowTestnetHook(IVault vault, uint256 debt)
+        internal
+    {
+        address debtAsset = registeredVaults[vault].debtAsset;
+        SafeERC20.safeTransfer(IERC20(debtAsset), DUMMY_WALLET, debt);
+        IERC20Mintable(connextTestToken).mint(address(this), debt);
+        SafeERC20.safeApprove(IERC20(connextTestToken), address(connext), debt); // Removing Connext Test Token
+    }
+
+    // Testnet only: mint debt asset on destination chain since connext doesnt support bridging of Aave specific asset types.
     function disburseTestnet(
         uint256 amount,
         address owner,
@@ -162,7 +196,7 @@ contract Router {
         connextTestToken = addr_;
     }
 
-    // Testnet only: needed since connext doesnt support bridging of Aave specific asset types. 
+    // Testnet only: needed since connext doesnt support bridging of Aave specific asset types.
     function setTestnetMapper(address addr_) external {
         tesnetMapper = ITestnetMapper(addr_);
     }
@@ -171,6 +205,16 @@ contract Router {
         // TODO SECURITY restrict this function
         routerByDomain[domain] = router;
         // TODO emit an event
+    }
+
+    function setConnextHandler(address addr_) external {
+        // TODO SECURITY remove this setter function. 
+        connext = IConnext(addr_);
+    }
+
+    function setPromiseRouter(address addr_) external {
+        // TODO SECURITY remove this setter function. 
+        promiseRouter = addr_;
     }
 
     function registerVault(IVault vault) public {

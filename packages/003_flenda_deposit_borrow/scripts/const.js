@@ -16,10 +16,10 @@ const connextData = {
     chainId: 5,
     domainId: 3331,
     ConnextHandler: {
-      address: "0x4cAA6358a3d9d1906B5DABDE60A626AAfD80186F",
+      address: "0x6c9a905Ab3f4495E2b47f5cA131ab71281E0546e",
     },
     PromiseRouter: {
-      address: "0xC02530858cE0260a1c4f214CF2d5b7c4E5986485",
+      address: "0xD7DAE26f3C54CEE823a02C6fD25d4301860F2B33",
     },
     TestToken: {
       address: "0x26FE8a8f86511d678d031a022E48FfF41c6a3e3b"
@@ -63,20 +63,22 @@ const mockOracleData = {
 }
 
 const xFujiDeployments = {
-  goerli: {
-    unwrapper: "0xBB73511B0099eF355AA580D0149AC4C679A0B805",
-    aaveV3: "0xc5d5a86E9f752e241eAc96a0595E4Cd6adc05F5a",
-    oracle: "0xD7E3AE6f48A1D442069b32a5Aa6e315B111B992C",
-    vault: "0x270B7341C18b07dCab42D25a4f3523F5D76e5988",
-    mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
-  },
   rinkeby: {
     unwrapper: "0xBB73511B0099eF355AA580D0149AC4C679A0B805",
     aaveV3: "0xc5d5a86E9f752e241eAc96a0595E4Cd6adc05F5a",
     oracle: "0xD7E3AE6f48A1D442069b32a5Aa6e315B111B992C",
-    vault: "0xE156BB884b9a0A7a4CBC7842341e281933F83b87",
+    vault: "0x459B490F86e6B7C86086511D6a378f8C4b313D17",
     mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
-  }
+    router: "0x6880eE32F0C5175bEb94D1712f14Aa5F70Df1EcA",
+  },
+  goerli: {
+    unwrapper: "0xBB73511B0099eF355AA580D0149AC4C679A0B805",
+    aaveV3: "0xc5d5a86E9f752e241eAc96a0595E4Cd6adc05F5a",
+    oracle: "0xD7E3AE6f48A1D442069b32a5Aa6e315B111B992C",
+    vault: "0x459B490F86e6B7C86086511D6a378f8C4b313D17",
+    mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
+    router: "0xfB6C304d0CE193693eee21299D22b8979A6425F5",
+  },
 }
 
 module.exports = {
