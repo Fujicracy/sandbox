@@ -223,6 +223,11 @@ contract Vault is ERC4626 {
         return address(_debtAsset);
     }
 
+    /** @dev Based on {IERC20-balanceOf}. */
+    function balanceOfDebt(address account) public view returns (uint256) {
+        return _debtShares[account];
+    }
+
     /** @dev Based on {IERC4626-totalAssets}. */
     function totalDebt() public view returns (uint256) {
         return _computeTotalDebt();
