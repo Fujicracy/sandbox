@@ -99,11 +99,11 @@ contract VaultTest is DSTestPlus {
     vm.label(address(userChainA), "userChainA");
 
     uint256 amount = 2 ether;
-    weth.deposit{ value: amount }();
-    SafeTransferLib.safeTransferFrom(weth, address(this), userChainA, amount);
-    assertEq(weth.balanceOf(userChainA), amount);
+    vm.deal(userChainA, amount);
 
     vm.startPrank(userChainA);
+    weth.deposit{ value: amount }();
+    assertEq(weth.balanceOf(userChainA), amount);
 
     SafeTransferLib.safeApprove(weth, address(vault), amount);
     vault.deposit(amount, userChainA);
@@ -119,11 +119,12 @@ contract VaultTest is DSTestPlus {
     vm.label(address(userChainA), "userChainA");
 
     uint256 amount = 2 ether;
-    weth.deposit{ value: amount }();
-    SafeTransferLib.safeTransferFrom(weth, address(this), userChainA, amount);
-    assertEq(weth.balanceOf(userChainA), amount);
+    vm.deal(userChainA, amount);
 
     vm.startPrank(userChainA);
+    weth.deposit{ value: amount }();
+    assertEq(weth.balanceOf(userChainA), amount);
+
 
     SafeTransferLib.safeApprove(weth, address(router), type(uint256).max);
     router.depositToVault(IVault(address(vault)), amount);
