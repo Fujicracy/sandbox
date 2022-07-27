@@ -11,6 +11,10 @@ import {AaveV3Goerli} from "../src/providers/goerli/AaveV3Goerli.sol";
 import {AaveV3Rinkeby} from "../src/providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
 
+interface IMintableWETH {
+  function mint(address, uint256) external;
+}
+
 contract VaultTest is DSTestPlus {
   uint256 goerliFork;
   uint256 rinkebyFork;
@@ -32,8 +36,8 @@ contract VaultTest is DSTestPlus {
   function setUp() public {
     goerliFork = vm.createFork("goerli");
     rinkebyFork = vm.createFork("rinkeby");
-    _setUpRinkeby();
-    /*_setUpGoerli();*/
+    /*_setUpRinkeby();*/
+    _setUpGoerli();
   }
 
   function _setUpGoerli() internal {
@@ -59,7 +63,7 @@ contract VaultTest is DSTestPlus {
     );
 
     vault.setActiveProvider(aaveV3);
-    router.approveVault(IVault(address(vault)));
+    router.registerVault(IVault(address(vault)));
   }
 
   function _setUpRinkeby() internal {
@@ -85,7 +89,7 @@ contract VaultTest is DSTestPlus {
     );
 
     vault.setActiveProvider(aaveV3);
-    router.approveVault(IVault(address(vault)));
+    router.registerVault(IVault(address(vault)));
   }
 
   function testConfigs() public {
@@ -98,12 +102,12 @@ contract VaultTest is DSTestPlus {
     address userChainA = address(0xA);
     vm.label(address(userChainA), "userChainA");
 
+    /*vm.deal(userChainA, amount);*/
     uint256 amount = 2 ether;
-    vm.deal(userChainA, amount);
+    IMintableWETH(address(weth)).mint(userChainA, amount);
+    assertEq(weth.balanceOf(userChainA), amount);
 
     vm.startPrank(userChainA);
-    weth.deposit{ value: amount }();
-    assertEq(weth.balanceOf(userChainA), amount);
 
     SafeTransferLib.safeApprove(weth, address(vault), amount);
     vault.deposit(amount, userChainA);
@@ -118,13 +122,12 @@ contract VaultTest is DSTestPlus {
     address userChainA = address(0xA);
     vm.label(address(userChainA), "userChainA");
 
+    /*vm.deal(userChainA, amount);*/
     uint256 amount = 2 ether;
-    vm.deal(userChainA, amount);
-
-    vm.startPrank(userChainA);
-    weth.deposit{ value: amount }();
+    IMintableWETH(address(weth)).mint(userChainA, amount);
     assertEq(weth.balanceOf(userChainA), amount);
 
+    vm.startPrank(userChainA);
 
     SafeTransferLib.safeApprove(weth, address(router), type(uint256).max);
     router.depositToVault(IVault(address(vault)), amount);

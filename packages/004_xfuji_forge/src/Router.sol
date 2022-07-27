@@ -39,11 +39,6 @@ contract Router is IRouter, PeripheryPayments {
     executor = connext.executor();
   }
 
-  function approveVault(IVault vault) external {
-    // TODO onlyOwner
-    approve(ERC20(vault.asset()), address(vault), type(uint256).max);
-  }
-
   function depositAndBorrow(
     IVault vault,
     uint256 depositAmount,
@@ -91,7 +86,6 @@ contract Router is IRouter, PeripheryPayments {
 
     uint32 originDomain = uint32(connext.domain());
     pullToken(ERC20(asset), amount, address(this));
-    approve(ERC20(asset), address(connext), type(uint256).max);
 
     bytes4 selector = bytes4(keccak256("authorizedBridgeCall(uint256,uint32,address,address)"));
     bytes memory callData = abi.encodeWithSelector(
@@ -142,9 +136,24 @@ contract Router is IRouter, PeripheryPayments {
     IVault(vault).deposit(amount, onBehalfOf);
   }
 
+  ///////////////////////
+  /// Admin functions ///
+  ///////////////////////
+
   function setRouter(uint32 domain, address router) external {
     // TODO only owner
     // TODO verify params
     routerByDomain[domain] = router;
+  }
+
+  function registerVault(IVault vault) external {
+    // TODO onlyOwner
+    address asset = vault.asset();
+    approve(ERC20(asset), address(vault), type(uint256).max);
+    approve(ERC20(asset), address(connext), type(uint256).max);
+
+    address debtAsset = vault.debtAsset();
+    approve(ERC20(debtAsset), address(vault), type(uint256).max);
+    approve(ERC20(debtAsset), address(connext), type(uint256).max);
   }
 }
