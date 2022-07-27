@@ -28,6 +28,9 @@
     "typechain": "^8.1.0",
     "typescript": ">=4.5.0"
   },
+  "dependencies": {},
   "type": "commonjs",
-  "dependencies": {}
+  "scripts": {
+    "test": "hardhat run ./test/runTest.js"
+  }
 }

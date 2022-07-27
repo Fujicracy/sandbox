@@ -61,12 +61,12 @@ const main = async () => {
   handler = handler.connect(testSigner);
 
   const callParams = {
-    to: xFujiDeployments[CHAIN_NAME].router, // the address that should receive the funds
+    to: xFujiDeployments[TARGET_CHAIN_NAME].router, // the address that should receive the funds
     callData: utx.data, // call router method depositBorrowAndBridgeTestnet()
     originDomain: connextData[CHAIN_NAME].domainId, // send from CHAIN_NAME
     destinationDomain: connextData[TARGET_CHAIN_NAME].domainId, // to TARGET_CHAIN_NAME
-    agent: xFujiDeployments[CHAIN_NAME].router, // address allowed to execute in addition to relayers  
-    recovery: xFujiDeployments[CHAIN_NAME].router, // fallback address to send funds to if execution fails on destination side
+    agent: xFujiDeployments[TARGET_CHAIN_NAME].router, // address allowed to execute in addition to relayers  
+    recovery: xFujiDeployments[TARGET_CHAIN_NAME].router, // fallback address to send funds to if execution fails on destination side
     forceSlow: false, // option that allows users to take the Nomad slow path (~30 mins) instead of paying routers a 0.05% fee on their transaction
     receiveLocal: false, // option for users to receive the local Nomad-flavored asset instead of the adopted asset on the destination side
     callback: ethers.constants.AddressZero, // zero address because we don't expect a callback for a simple transfer 
@@ -86,6 +86,7 @@ const main = async () => {
   await xcallTxReceipt.wait();
   console.log(xcallTxReceipt); // so we can see the transaction hash
   console.log("Xcall Test complete!");
+  console.log("Read this experiment README.md file at root of this package.");
 }
 
 main().catch((error) => {
