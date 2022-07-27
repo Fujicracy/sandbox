@@ -12,7 +12,7 @@ import "../interfaces/aaveV3/IPool.sol";
 * @notice This contract allows interaction with AaveV3.
 */
 contract AaveV3 is IProvider { 
-  IPoolAddressProvider addressProvider;
+  IPoolAddressProvider public immutable addressProvider;
 
   constructor(address _addressProvider) {
     addressProvider = IPoolAddressProvider(_addressProvider);
