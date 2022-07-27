@@ -90,5 +90,6 @@ contract DeployerTestnet {
     // Configs
     vault.setActiveProvider(aaveV3);
     router.registerVault(IVault(address(vault)));
+    router.setTestnetToken(reg.testToken);
   }
 }

@@ -8,6 +8,13 @@ import "./interfaces/IVault.sol";
 import "./interfaces/IRouter.sol";
 import "./helpers/PeripheryPayments.sol";
 
+// -------> On testnet ONLY
+interface IERC20Mintable is IERC20 {
+  function mint(address to, uint256 amount) external;
+  function burn(uint256 amount) external;
+}
+// <--------
+
 // TODO inherit from SelfPermit, Multicall
 // for additional functionalitites
 // ref: https://github.com/fei-protocol/ERC4626/blob/main/src/ERC4626RouterBase.sol
@@ -33,6 +40,10 @@ contract Router is IRouter, PeripheryPayments {
     );
     _;
   }
+
+  // -------> On testnet ONLY
+  address public connextTestToken;
+  // <------
 
   constructor(IWETH9 weth, IConnextHandler connext_) PeripheryPayments(weth) {
     connext = connext_;
@@ -87,6 +98,12 @@ contract Router is IRouter, PeripheryPayments {
     uint32 originDomain = uint32(connext.domain());
     pullToken(ERC20(asset), amount, address(this));
 
+    // ------> On testnet ONLY
+    // cannot transfer anything else than TEST token
+    // that's why we pull user's asset but we bridge TEST token
+    IERC20Mintable(connextTestToken).mint(address(this), amount);
+    // <------
+
     bytes4 selector = bytes4(keccak256("authorizedBridgeCall(uint256,uint32,address,address)"));
     bytes memory callData = abi.encodeWithSelector(
       selector,
@@ -113,7 +130,10 @@ contract Router is IRouter, PeripheryPayments {
 
     XCallArgs memory xcallArgs = XCallArgs({
       params: callParams,
-      transactingAssetId: asset,
+      // ------> On testnet ONLY
+      // replace connextTestToken by asset
+      transactingAssetId: connextTestToken,
+      // <------
       amount: amount
     });
 
@@ -133,6 +153,10 @@ contract Router is IRouter, PeripheryPayments {
     // TODO: add modifier onlyConnextExecutor
     originDomain;
 
+    // -------> On testnet ONLY
+    IERC20Mintable(address(WETH9)).mint(address(this), amount);
+    // <------
+
     IVault(vault).deposit(amount, onBehalfOf);
   }
 
@@ -145,6 +169,13 @@ contract Router is IRouter, PeripheryPayments {
     // TODO verify params
     routerByDomain[domain] = router;
   }
+
+  // -------> On testnet ONLY
+  function setTestnetToken(address token) external {
+    connextTestToken = token;
+    approve(ERC20(token), address(connext), type(uint256).max);
+  }
+  // <------
 
   function registerVault(IVault vault) external {
     // TODO onlyOwner
