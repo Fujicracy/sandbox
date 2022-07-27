@@ -7,6 +7,7 @@ import {Router, IWETH9} from "./Router.sol";
 import {AaveV3Goerli} from "./providers/goerli/AaveV3Goerli.sol";
 import {AaveV3Rinkeby} from "./providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "./interfaces/ILendingProvider.sol";
+import {IVault} from "./interfaces/IVault.sol";
 
 contract DeployerTestnet {
 
@@ -28,8 +29,12 @@ contract DeployerTestnet {
   Vault.Factor maxLtv = Vault.Factor(75, 100);
   Vault.Factor liqRatio = Vault.Factor(5, 100);
 
-  mapping(string => Registry) public registryByChain;
-  mapping(string => Deploys) public deploysByChain;
+  // Domains
+  // goerli -> 3331
+  // rinkeby -> 1111
+
+  mapping(uint32 => Registry) public registryByDomain;
+  mapping(uint32 => Deploys) public deploysByDomain;
 
   constructor() {
     Registry memory goerli = Registry({
@@ -40,7 +45,7 @@ contract DeployerTestnet {
       testToken: 0x26FE8a8f86511d678d031a022E48FfF41c6a3e3b,
       connextHandler: 0x6c9a905Ab3f4495E2b47f5cA131ab71281E0546e
     });
-    registryByChain["goerli"] = goerli;
+    registryByDomain[3331] = goerli;
 
     Registry memory rinkeby = Registry({
       asset: 0xd74047010D77c5901df5b0f9ca518aED56C85e8D,
@@ -50,17 +55,17 @@ contract DeployerTestnet {
       testToken: 0x3FFc03F05D1869f493c7dbf913E636C6280e0ff9,
       connextHandler: 0x4cAA6358a3d9d1906B5DABDE60A626AAfD80186F
     });
-    registryByChain["rinkeby"] = rinkeby;
+    registryByDomain[1111] = rinkeby;
   }
 
-  function deploy(string calldata chainName) public {
-    Registry memory reg = registryByChain[chainName]; 
+  function deploy(uint32 domain) public {
+    Registry memory reg = registryByDomain[domain]; 
     if (reg.asset == address(0)) {
       revert("No registry for this chain");
     }
 
     ILendingProvider aaveV3;
-    if (keccak256(bytes(chainName)) == keccak256(bytes("goerli"))) {
+    if (domain == 3331) {
       aaveV3 = new AaveV3Goerli();
     } else {
       aaveV3 = new AaveV3Rinkeby();
@@ -78,8 +83,12 @@ contract DeployerTestnet {
       liqRatio
     );
 
-    deploysByChain[chainName].vault = vault;
-    deploysByChain[chainName].router = router;
-    deploysByChain[chainName].provider = aaveV3;
+    deploysByDomain[domain].vault = vault;
+    deploysByDomain[domain].router = router;
+    deploysByDomain[domain].provider = aaveV3;
+
+    // Configs
+    vault.setActiveProvider(aaveV3);
+    router.registerVault(IVault(address(vault)));
   }
 }
