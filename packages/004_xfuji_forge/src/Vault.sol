@@ -32,17 +32,15 @@ contract Vault is ERC4626 {
   IFujiOracle public oracle;
   IRouter public router;
 
-  Factor public maxLtv;
+  Factor public maxLtv = Factor(75, 100);
 
-  Factor public liqRatio;
+  Factor public liqRatio = Factor(5, 100);
 
   constructor(
     address asset_,
     address debtAsset_,
     address oracle_,
-    address router_,
-    Factor memory maxLtv_,
-    Factor memory liqRatio_
+    address router_
   )
     ERC4626(IERC20Metadata(asset_))
     ERC20(
@@ -54,8 +52,6 @@ contract Vault is ERC4626 {
   {
     _debtAsset = IERC20Metadata(debtAsset_);
     oracle = IFujiOracle(oracle_);
-    maxLtv = maxLtv_;
-    liqRatio = liqRatio_;
 
     router = IRouter(router_);
   }

@@ -6,7 +6,8 @@ import {IConnextHandler} from "nxtp/core/connext/interfaces/IConnextHandler.sol"
 import {IVault} from "../src/interfaces/IVault.sol";
 import {DSTestPlus} from "./utils/DSTestPlus.sol";
 import {Vault, ERC20} from "../src/Vault.sol";
-import {Router, IWETH9} from "../src/Router.sol";
+import {Router} from "../src/Router.sol";
+import {IWETH9} from "../src/helpers/PeripheryPayments.sol";
 import {AaveV3Goerli} from "../src/providers/goerli/AaveV3Goerli.sol";
 import {AaveV3Rinkeby} from "../src/providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
@@ -18,9 +19,6 @@ interface IMintableWETH {
 contract VaultTest is DSTestPlus {
   uint256 goerliFork;
   uint256 rinkebyFork;
-
-  Vault.Factor maxLtv = Vault.Factor(75, 100);
-  Vault.Factor liqRatio = Vault.Factor(5, 100);
 
   Vault public vault;
   Router public router;
@@ -57,9 +55,7 @@ contract VaultTest is DSTestPlus {
       asset,
       debtAsset,
       oracle,
-      address(router),
-      maxLtv,
-      liqRatio
+      address(router)
     );
 
     vault.setActiveProvider(aaveV3);
@@ -83,9 +79,7 @@ contract VaultTest is DSTestPlus {
       asset,
       debtAsset,
       oracle,
-      address(router),
-      maxLtv,
-      liqRatio
+      address(router)
     );
 
     vault.setActiveProvider(aaveV3);

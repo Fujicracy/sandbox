@@ -3,7 +3,8 @@ pragma solidity ^0.8.9;
 
 import {IConnextHandler} from "nxtp/core/connext/interfaces/IConnextHandler.sol";
 import {Vault} from "./Vault.sol";
-import {Router, IWETH9} from "./Router.sol";
+import {Router} from "./Router.sol";
+import {IWETH9} from "./helpers/PeripheryPayments.sol";
 import {AaveV3Goerli} from "./providers/goerli/AaveV3Goerli.sol";
 import {AaveV3Rinkeby} from "./providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "./interfaces/ILendingProvider.sol";
@@ -58,7 +59,7 @@ contract DeployerTestnet {
     registryByDomain[1111] = rinkeby;
   }
 
-  function deploy(uint32 domain) public {
+  function deploy(uint32 domain) external {
     Registry memory reg = registryByDomain[domain]; 
     if (reg.asset == address(0)) {
       revert("No registry for this chain");
@@ -78,9 +79,7 @@ contract DeployerTestnet {
       reg.asset,
       reg.debtAsset,
       reg.oracle,
-      address(router),
-      maxLtv,
-      liqRatio
+      address(router)
     );
 
     deploysByDomain[domain].vault = vault;

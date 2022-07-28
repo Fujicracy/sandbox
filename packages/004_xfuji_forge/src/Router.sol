@@ -155,6 +155,7 @@ contract Router is IRouter, PeripheryPayments {
 
     // -------> On testnet ONLY
     IERC20Mintable(address(WETH9)).mint(address(this), amount);
+    // maybe we burn amount of connextTestToken ???
     // <------
 
     IVault(vault).deposit(amount, onBehalfOf);
