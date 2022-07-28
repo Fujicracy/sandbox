@@ -27,6 +27,7 @@ contract VaultTest is DSTestPlus {
   IWETH9 public weth;
   IConnextHandler public connextHandler;
 
+  address public connextTestToken;
   address public asset;
   address public debtAsset;
   address public oracle;
@@ -43,6 +44,7 @@ contract VaultTest is DSTestPlus {
 
     weth = IWETH9(0x2e3A2fb8473316A02b8A297B982498E661E1f6f5);
     connextHandler = IConnextHandler(0x6c9a905Ab3f4495E2b47f5cA131ab71281E0546e);
+    connextTestToken = 0x26FE8a8f86511d678d031a022E48FfF41c6a3e3b;
 
     asset = 0x2e3A2fb8473316A02b8A297B982498E661E1f6f5; // weth
     debtAsset = 0xA2025B15a1757311bfD68cb14eaeFCc237AF5b43; // usdc
@@ -60,6 +62,9 @@ contract VaultTest is DSTestPlus {
 
     vault.setActiveProvider(aaveV3);
     router.registerVault(IVault(address(vault)));
+
+    router.setRouter(1111, address(0xA));
+    router.setTestnetToken(connextTestToken);
   }
 
   function _setUpRinkeby() internal {
@@ -67,6 +72,7 @@ contract VaultTest is DSTestPlus {
 
     weth = IWETH9(0xd74047010D77c5901df5b0f9ca518aED56C85e8D);
     connextHandler = IConnextHandler(0x4cAA6358a3d9d1906B5DABDE60A626AAfD80186F);
+    connextTestToken = 0x3FFc03F05D1869f493c7dbf913E636C6280e0ff9;
 
     asset = 0xd74047010D77c5901df5b0f9ca518aED56C85e8D; // weth
     debtAsset = 0xb18d016cDD2d9439A19f15633005A6b2cd6Aa774; // usdc
@@ -84,6 +90,9 @@ contract VaultTest is DSTestPlus {
 
     vault.setActiveProvider(aaveV3);
     router.registerVault(IVault(address(vault)));
+
+    router.setRouter(3331, address(0xA));
+    router.setTestnetToken(connextTestToken);
   }
 
   function testConfigs() public {
