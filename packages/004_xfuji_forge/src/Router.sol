@@ -143,9 +143,6 @@ contract Router is IRouter, PeripheryPayments {
     address vault,
     address onBehalfOf
   ) external onlyConnextExecutor(originDomain) {
-    // TODO: add modifier onlyConnextExecutor
-    originDomain;
-
     // -------> On testnet ONLY
     IERC20Mintable(address(WETH9)).mint(address(this), amount);
     // maybe we burn amount of connextTestToken ???
