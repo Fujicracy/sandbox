@@ -5,20 +5,13 @@ import "nxtp/core/connext/libraries/LibConnextStorage.sol";
 import "nxtp/core/connext/interfaces/IConnextHandler.sol";
 import "nxtp/core/connext/interfaces/IExecutor.sol";
 import "./interfaces/IVault.sol";
+import "./interfaces/IERC20Mintable.sol";
 import "./interfaces/IRouter.sol";
 import "./helpers/PeripheryPayments.sol";
-
-// -------> On testnet ONLY
-interface IERC20Mintable is IERC20 {
-  function mint(address to, uint256 amount) external;
-  function burn(uint256 amount) external;
-}
-// <--------
 
 // TODO inherit from SelfPermit, Multicall
 // for additional functionalitites
 // ref: https://github.com/fei-protocol/ERC4626/blob/main/src/ERC4626RouterBase.sol
-
 contract Router is IRouter, PeripheryPayments {
   IConnextHandler public connext;
   IExecutor public executor;
