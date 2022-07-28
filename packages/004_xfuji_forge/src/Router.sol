@@ -17,17 +17,17 @@ contract Router is IRouter, PeripheryPayments {
   IExecutor public executor;
 
   // ref: https://docs.nomad.xyz/developers/environments/domain-chain-ids
-  mapping(uint32 => address) public routerByDomain;
+  mapping(uint256 => address) public routerByDomain;
 
   // A modifier for permissioned function calls.
   // Note: This is an important security consideration. If your target
   //       contract function is meant to be permissioned, it must check
   //       that the originating call is from the correct domain and contract.
   //       Also, check that the msg.sender is the Connext Executor address.
-  modifier onlyConnextExecutor(uint32 originDomain) {
+  modifier onlyConnextExecutor(uint256 originDomain) {
     require(
       IExecutor(msg.sender).originSender() == routerByDomain[originDomain] &&
-        IExecutor(msg.sender).origin() == originDomain &&
+        IExecutor(msg.sender).origin() == uint32(originDomain) &&
         msg.sender == address(executor),
       "Expected origin contract on origin domain called by Executor"
     );
@@ -83,12 +83,12 @@ contract Router is IRouter, PeripheryPayments {
   function bridgeDepositToVault(
     address asset,
     uint256 amount,
-    uint32 destDomain,
+    uint256 destDomain,
     address destVault
   ) external {
     // verify destVault exists on destDomain?
 
-    uint32 originDomain = uint32(connext.domain());
+    uint256 originDomain = connext.domain();
     pullToken(ERC20(asset), amount, address(this));
 
     // ------> On testnet ONLY
@@ -97,7 +97,7 @@ contract Router is IRouter, PeripheryPayments {
     IERC20Mintable(connextTestToken).mint(address(this), amount);
     // <------
 
-    bytes4 selector = bytes4(keccak256("authorizedBridgeCall(uint256,uint32,address,address)"));
+    bytes4 selector = bytes4(keccak256("authorizedBridgeCall(uint256,uint256,address,address)"));
     bytes memory callData = abi.encodeWithSelector(
       selector,
       amount,
@@ -109,8 +109,8 @@ contract Router is IRouter, PeripheryPayments {
     CallParams memory callParams = CallParams({
       to: routerByDomain[destDomain],
       callData: callData,
-      originDomain: originDomain,
-      destinationDomain: destDomain,
+      originDomain: uint32(originDomain),
+      destinationDomain: uint32(destDomain),
       agent: msg.sender, // address allowed to transaction on destination side in addition to relayers
       recovery: msg.sender, // fallback address to send funds to if execution fails on destination side
       forceSlow: true, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
@@ -139,10 +139,10 @@ contract Router is IRouter, PeripheryPayments {
   // callable only from the bridge
   function authorizedBridgeCall(
     uint256 amount,
-    uint32 originDomain,
+    uint256 originDomain,
     address vault,
     address onBehalfOf
-  ) external {
+  ) external onlyConnextExecutor(originDomain) {
     // TODO: add modifier onlyConnextExecutor
     originDomain;
 
@@ -158,7 +158,7 @@ contract Router is IRouter, PeripheryPayments {
   /// Admin functions ///
   ///////////////////////
 
-  function setRouter(uint32 domain, address router) external {
+  function setRouter(uint256 domain, address router) external {
     // TODO only owner
     // TODO verify params
     routerByDomain[domain] = router;
