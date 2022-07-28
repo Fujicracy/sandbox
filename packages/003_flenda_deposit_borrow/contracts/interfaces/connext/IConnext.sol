@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.9;
 
+import "./IExecutor.sol";
+
 /**
  * @title IConnextHandler interface stripped down version.
  * @author fujidao Labs
@@ -57,4 +59,6 @@ interface IConnext {
   function domain() external view returns (uint256);
 
   function xcall(XCallArgs calldata _args) external payable returns (bytes32);
+
+  function executor() external view returns (IExecutor);
 }

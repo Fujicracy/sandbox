@@ -11,15 +11,15 @@ if (!process.env.INFURA_ID) {
   throw "Please set up PRIVATE_KEY for a test user in .env";
 }
 
-const CHAIN_NAME = process.env.NETWORK;
+const ORIGIN_CHAIN = process.env.NETWORK;
 
 /// Test Parameters ///
-const TARGET_CHAIN_NAME = 'rinkeby'; // Set up the target chain
+const DEST_CHAIN = 'rinkeby'; // Set up the destination chain
 const DEPOSIT_AMOUNT = ethers.utils.parseEther("0.5"); // Deposit amount will be in WETH.
 const BORROW_AMOUNT = ethers.utils.parseUnits("200", 6); // Borrow amount will be in USDC (6 decimals).
 
-if (CHAIN_NAME == TARGET_CHAIN_NAME) {
-  throw "NETWORK in ./packages/hardhat/.env and TARGET_CHAIN_NAME cannot be the same";
+if (ORIGIN_CHAIN == DEST_CHAIN) {
+  throw "NETWORK in ./packages/hardhat/.env and DEST_CHAIN cannot be the same";
 }
 
 console.log("Testing XFuji + Connext deposit and borrow\n\n");
@@ -34,12 +34,12 @@ const checkUserEthBal = async () => {
 const prestage = async () => {
   await checkUserEthBal();
   console.log("...pre-staging test user with collateral");
-  let test = await ethers.getContractAt("IERC20Mintable", connextData[CHAIN_NAME].TestToken.address);
+  let test = await ethers.getContractAt("IERC20Mintable", connextData[ORIGIN_CHAIN].TestToken.address);
   test = test.connect(testSigner);
   let tx = await test.mint(testSigner.address, DEPOSIT_AMOUNT);
   await tx.wait();
   console.log("...erc20 approval of 'collateral' to connext handler");
-  tx = await test.approve(connextData[CHAIN_NAME].ConnextHandler.address, DEPOSIT_AMOUNT);
+  tx = await test.approve(connextData[ORIGIN_CHAIN].ConnextHandler.address, DEPOSIT_AMOUNT);
   await tx.wait();
 };
 
@@ -48,25 +48,27 @@ const main = async () => {
   await prestage();
 
   console.log("...building XCall parameters");
-  const router = await ethers.getContractAt("Router", xFujiDeployments[CHAIN_NAME].router);
+  const router = await ethers.getContractAt("Router", xFujiDeployments[ORIGIN_CHAIN].router);
   const utx = await router.populateTransaction.depositBorrowAndBridgeTestnet(
-    xFujiDeployments[TARGET_CHAIN_NAME].vault,
+    xFujiDeployments[DEST_CHAIN].vault,
     DEPOSIT_AMOUNT,
     BORROW_AMOUNT,
     testSigner.address,
-    connextData[CHAIN_NAME].domainId
+    connextData[DEST_CHAIN].domainId
   );
 
-  let handler = await ethers.getContractAt("IConnext", connextData[CHAIN_NAME].ConnextHandler.address);
+  let handler = await ethers.getContractAt("IConnext", connextData[ORIGIN_CHAIN].ConnextHandler.address);
   handler = handler.connect(testSigner);
 
+  const calledContract = xFujiDeployments[DEST_CHAIN].router;
+
   const callParams = {
-    to: xFujiDeployments[TARGET_CHAIN_NAME].router, // the address that should receive the funds
+    to: calledContract, // the address that should receive the funds
     callData: utx.data, // call router method depositBorrowAndBridgeTestnet()
-    originDomain: connextData[CHAIN_NAME].domainId, // send from CHAIN_NAME
-    destinationDomain: connextData[TARGET_CHAIN_NAME].domainId, // to TARGET_CHAIN_NAME
-    agent: xFujiDeployments[TARGET_CHAIN_NAME].router, // address allowed to execute in addition to relayers  
-    recovery: xFujiDeployments[TARGET_CHAIN_NAME].router, // fallback address to send funds to if execution fails on destination side
+    originDomain: connextData[ORIGIN_CHAIN].domainId, // send from CHAIN_NAME
+    destinationDomain: connextData[DEST_CHAIN].domainId, // to DEST_CHAIN
+    agent: calledContract, // address allowed to execute in addition to relayers  
+    recovery: calledContract, // fallback address to send funds to if execution fails on destination side
     forceSlow: false, // option that allows users to take the Nomad slow path (~30 mins) instead of paying routers a 0.05% fee on their transaction
     receiveLocal: false, // option for users to receive the local Nomad-flavored asset instead of the adopted asset on the destination side
     callback: ethers.constants.AddressZero, // zero address because we don't expect a callback for a simple transfer 
@@ -77,7 +79,7 @@ const main = async () => {
 
   const xCallArgs = {
     params: callParams,
-    transactingAssetId: connextData[CHAIN_NAME].TestToken.address, // the Connext Test Token
+    transactingAssetId: connextData[ORIGIN_CHAIN].TestToken.address, // the Connext Test Token
     amount: DEPOSIT_AMOUNT
   };
 

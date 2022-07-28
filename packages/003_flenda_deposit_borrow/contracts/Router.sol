@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "./interfaces/connext/IConnext.sol";
+import "./interfaces/connext/IExecutor.sol";
 import "./interfaces/IVault.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -21,10 +22,11 @@ contract Router {
         address debtAsset;
     }
 
-    mapping(uint32 => address) public routerByDomain;
+    mapping(uint256 => address) public routerByDomain;
 
     IConnext public connext; // TODO SECURITY make immutable
     address public promiseRouter; // TODO SECURITY make immutable
+    IExecutor public executor; // The address of the Connext Executor contract
 
     mapping(IVault => VaultParams) public registeredVaults;
 
@@ -44,6 +46,22 @@ contract Router {
         _;
     }
 
+    // A modifier for permissioned function calls.
+    // Note: This is an important security consideration. If your target
+    //       contract function is meant to be permissioned, it must check
+    //       that the originating call is from the correct domain and contract.
+    //       Also, check that the msg.sender is the Connext Executor address.
+    modifier onlyConnextExecutor(uint32 originDomain) {
+        require(
+            IExecutor(msg.sender).originSender() ==
+                routerByDomain[originDomain] &&
+                IExecutor(msg.sender).origin() == originDomain &&
+                msg.sender == address(executor),
+            "Expected origin contract on origin domain called by Executor"
+        );
+        _;
+    }
+
     constructor(
         IConnext connext_,
         address promiseRouter_,
@@ -53,8 +71,11 @@ contract Router {
     ) {
         connext = connext_;
         promiseRouter = promiseRouter_;
-        connextTestToken = connextTestToken_;
+        executor = connext.executor();
+
         registerVault(vault_);
+
+        connextTestToken = connextTestToken_;
         tesnetMapper = ITestnetMapper(tesnetMapper_);
     }
 
@@ -89,22 +110,24 @@ contract Router {
             registeredVaults[vault].debtAsset,
             destDomain
         );
+
+        uint32 originDomain = uint32(connext.domain());
+
         bytes memory callData = abi.encodeWithSelector(
             Router.disburseTestnet.selector,
             debt,
             owner,
-            mapped
+            mapped,
+            originDomain
         );
-
-        uint32 originDomain = uint32(connext.domain());
 
         IConnext.CallParams memory callParams = IConnext.CallParams({
             to: routerByDomain[destDomain],
             callData: callData,
             originDomain: originDomain,
             destinationDomain: destDomain,
-            agent: msg.sender, // address allowed to transaction on destination side in addition to relayers
-            recovery: msg.sender, // fallback address to send funds to if execution fails on destination side
+            agent: routerByDomain[destDomain], // address allowed to transaction on destination side in addition to relayers
+            recovery: routerByDomain[destDomain], // fallback address to send funds to if execution fails on destination side
             forceSlow: true, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
             receiveLocal: false, // option to receive the local Nomad-flavored asset instead of the adopted asset
             callback: address(0), // this contract implements the callback
@@ -162,7 +185,12 @@ contract Router {
     function _beforeDepositBorrowTestnetHook(IVault vault, uint256 assets)
         internal
     {
-        SafeERC20.safeTransfer(IERC20(connextTestToken), DUMMY_WALLET, assets); // Removing Connext Test Token
+        SafeERC20.safeTransferFrom(
+            IERC20(connextTestToken),
+            msg.sender,
+            DUMMY_WALLET,
+            assets
+        );
         address asset = registeredVaults[vault].asset;
         IERC20Mintable(asset).mint(address(this), assets); // Minting weth collateral accepted in AaveV3.
     }
@@ -182,8 +210,15 @@ contract Router {
     function disburseTestnet(
         uint256 amount,
         address owner,
-        address mapped
-    ) external onlyPromiseRouter {
+        address mapped,
+        uint32 originDomain
+    ) external onlyConnextExecutor(originDomain) {
+        SafeERC20.safeTransferFrom(
+            IERC20(connextTestToken),
+            msg.sender,
+            DUMMY_WALLET,
+            amount
+        );
         IERC20Mintable(mapped).mint(owner, amount);
     }
 
@@ -208,12 +243,12 @@ contract Router {
     }
 
     function setConnextHandler(address addr_) external {
-        // TODO SECURITY remove this setter function. 
+        // TODO SECURITY remove this setter function.
         connext = IConnext(addr_);
     }
 
     function setPromiseRouter(address addr_) external {
-        // TODO SECURITY remove this setter function. 
+        // TODO SECURITY remove this setter function.
         promiseRouter = addr_;
     }
 
