@@ -16,6 +16,14 @@ contract Router is IRouter, PeripheryPayments {
   IConnextHandler public connext;
   IExecutor public executor;
 
+  enum Action {
+    Deposit,
+    Withdraw,
+    Borrow,
+    Payback,
+    BridgeTransfer
+  }
+
   // ref: https://docs.nomad.xyz/developers/environments/domain-chain-ids
   mapping(uint256 => address) public routerByDomain;
 
@@ -80,15 +88,15 @@ contract Router is IRouter, PeripheryPayments {
     vaultTo.deposit(amount, msg.sender);
   }
 
-  function bridgeDepositToVault(
+  function bridgeDepositAndBorrow(
+    uint256 destDomain,
+    address destVault,
     address asset,
     uint256 amount,
-    uint256 destDomain,
-    address destVault
+    uint256 borrowAmount
   ) external {
     // verify destVault exists on destDomain?
 
-    uint256 originDomain = connext.domain();
     pullToken(ERC20(asset), amount, address(this));
 
     // ------> On testnet ONLY
@@ -97,30 +105,102 @@ contract Router is IRouter, PeripheryPayments {
     IERC20Mintable(connextTestToken).mint(address(this), amount);
     // <------
 
-    bytes4 selector = bytes4(keccak256("authorizedBridgeCall(uint256,uint256,address,address)"));
-    bytes memory callData = abi.encodeWithSelector(
-      selector,
-      amount,
-      originDomain,
+    Action[] memory actions = new Action[](2);
+    bytes[] memory args = new bytes[](2);
+
+    actions[0] = Action.Deposit;
+    args[0] = abi.encode(amount, msg.sender);
+
+    actions[1] = Action.Borrow;
+    args[1] = abi.encode(borrowAmount, msg.sender, msg.sender);
+
+    bytes memory params = abi.encode(
       destVault,
-      msg.sender
+      asset,
+      amount,
+      actions,
+      args
     );
 
+    bytes4 selector = bytes4(keccak256("bridgeCall(uint256,bytes)"));
+
+    bytes memory callData = abi.encodeWithSelector(
+      selector,
+      connext.domain(),
+      params
+    );
+
+    _bridgeTransferWithCalldata(destDomain, asset, amount, callData);
+  }
+
+  // Move deposit to another strategy on a different chain.
+  // function teleportDeposit(...) external;
+
+  // callable only from the bridge
+  function bridgeCall(
+    uint256 originDomain,
+    bytes memory params
+  ) external onlyConnextExecutor(originDomain) {
+    (
+      address vault,
+      address bridgedAsset,
+      uint256 bridgedAmount,
+      Action[] memory actions,
+      bytes[] memory args
+    ) = abi.decode(params, (address,address,uint256,Action[],bytes[]));
+
+    // TODO pull bridgedAsset whatever it is
+    bridgedAsset;
+    // this pull makes the call from the executor to fail
+    /*pullToken(ERC20(connextTestToken), bridgedAmount, address(this));*/
+
+    // -------> On testnet ONLY
+    IERC20Mintable(address(WETH9)).mint(address(this), bridgedAmount);
+    // <------
+
+    uint256 len = actions.length;
+    for (uint256 i = 0; i < len; i++) {
+      if (actions[i] == Action.Deposit) {
+        (uint256 amount, address receiver) = abi.decode(args[i], (uint256,address));
+        IVault(vault).deposit(amount, receiver);
+      } else if (actions[i] == Action.Withdraw) {
+        (uint256 amount, address receiver, address owner) = abi.decode(args[i], (uint256,address,address));
+        IVault(vault).withdraw(amount, receiver, owner);
+      } else if (actions[i] == Action.Borrow) {
+        (uint256 amount, address receiver, address owner) = abi.decode(args[i], (uint256,address,address));
+        IVault(vault).borrow(amount, receiver, owner);
+      } else if (actions[i] == Action.Payback) {
+        (uint256 amount, address receiver) = abi.decode(args[i], (uint256,address));
+        IVault(vault).payback(amount, receiver);
+      } else if (actions[i] == Action.BridgeTransfer) {
+        (uint256 domain, address asset, uint256 amount, address receiver) = abi.decode(args[i], (uint256,address,uint256,address));
+        _bridgeTransfer(domain, asset, amount, receiver); 
+      }
+    }
+  }
+
+  function _bridgeTransfer(
+    uint256 destDomain,
+    address asset,
+    uint256 amount,
+    address receiver
+  ) internal {
     CallParams memory callParams = CallParams({
-      to: routerByDomain[destDomain],
-      callData: callData,
-      originDomain: uint32(originDomain),
+      to: receiver,
+      callData: "", // empty here because we're only sending funds
+      originDomain: uint32(connext.domain()),
       destinationDomain: uint32(destDomain),
-      agent: msg.sender, // address allowed to transaction on destination side in addition to relayers
-      recovery: msg.sender, // fallback address to send funds to if execution fails on destination side
-      forceSlow: true, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
+      agent: receiver, // address allowed to transaction on destination side in addition to relayers
+      recovery: receiver, // fallback address to send funds to if execution fails on destination side
+      forceSlow: false, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
       receiveLocal: false, // option to receive the local Nomad-flavored asset instead of the adopted asset
-      callback: address(0), // this contract implements the callback
+      callback: address(0), // zero address because we don't expect a callback
       callbackFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
       relayerFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
-      slippageTol: 9995 // tolerate .05% slippage
+      slippageTol: 9995
     });
 
+    asset;
     XCallArgs memory xcallArgs = XCallArgs({
       params: callParams,
       // ------> On testnet ONLY
@@ -133,22 +213,38 @@ contract Router is IRouter, PeripheryPayments {
     connext.xcall(xcallArgs);
   }
 
-  // Move deposit to another strategy on a different chain.
-  // function teleportDeposit(...) external;
-
-  // callable only from the bridge
-  function authorizedBridgeCall(
+  function _bridgeTransferWithCalldata(
+    uint256 destDomain,
+    address asset,
     uint256 amount,
-    uint256 originDomain,
-    address vault,
-    address onBehalfOf
-  ) external onlyConnextExecutor(originDomain) {
-    // -------> On testnet ONLY
-    IERC20Mintable(address(WETH9)).mint(address(this), amount);
-    // maybe we burn amount of connextTestToken ???
-    // <------
+    bytes memory callData
+  ) internal {
+    CallParams memory callParams = CallParams({
+      to: routerByDomain[destDomain],
+      callData: callData,
+      originDomain: uint32(connext.domain()),
+      destinationDomain: uint32(destDomain),
+      agent: msg.sender, // address allowed to transaction on destination side in addition to relayers
+      recovery: msg.sender, // fallback address to send funds to if execution fails on destination side
+      forceSlow: true, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
+      receiveLocal: false, // option to receive the local Nomad-flavored asset instead of the adopted asset
+      callback: address(0), // this contract implements the callback
+      callbackFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
+      relayerFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
+      slippageTol: 9995 // tolerate .05% slippage
+    });
 
-    IVault(vault).deposit(amount, onBehalfOf);
+    asset;
+    XCallArgs memory xcallArgs = XCallArgs({
+      params: callParams,
+      // ------> On testnet ONLY
+      // replace connextTestToken by asset
+      transactingAssetId: connextTestToken,
+      // <------
+      amount: amount
+    });
+
+    connext.xcall(xcallArgs);
   }
 
   ///////////////////////

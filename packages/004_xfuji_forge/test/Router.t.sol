@@ -13,7 +13,7 @@ import {AaveV3Goerli} from "../src/providers/goerli/AaveV3Goerli.sol";
 import {AaveV3Rinkeby} from "../src/providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
 
-interface IMintableWETH {
+interface IMintable {
   function mint(address, uint256) external;
 }
 
@@ -102,24 +102,27 @@ contract RouterTest is DSTestPlus {
     vm.label(address(userChainA), "userChainA");
 
     uint256 amount = 2 ether;
-    IMintableWETH(address(weth)).mint(userChainA, amount);
+    uint256 borrowAmount = 1000_000_000;
+    IMintable(address(weth)).mint(userChainA, amount);
     assertEq(weth.balanceOf(userChainA), amount);
 
     vm.startPrank(userChainA);
 
     SafeTransferLib.safeApprove(weth, address(router), type(uint256).max);
     uint256 domain = connextHandler.domain();
-    router.bridgeDepositToVault(
+    router.bridgeDepositAndBorrow(
+      domain == 3331 ? 1111 : 3331,
+      address(vault),
       address(weth),
       amount,
-      domain == 3331 ? 1111 : 3331,
-      address(vault)
+      borrowAmount
     );
   }
 
   function testBridgeInbound() public {
     address userChainA = address(0xA);
     uint256 amount = 2 ether;
+    uint256 borrowAmount = 1000_000_000;
 
     uint256 domain = connextHandler.domain();
     address executor = address(connextHandler.executor());
@@ -134,13 +137,30 @@ contract RouterTest is DSTestPlus {
       abi.encodeWithSelector(IExecutor(executor).origin.selector),
       abi.encode(domain == 3331 ? 1111 : 3331)
     );
+    IMintable(connextTestToken).mint(executor, amount);
+
+    Router.Action[] memory actions = new Router.Action[](2);
+    actions[0] = Router.Action.Deposit;
+    actions[1] = Router.Action.Borrow;
+
+    bytes[] memory args = new bytes[](2);
+    args[0] = abi.encode(amount, userChainA);
+    args[1] = abi.encode(borrowAmount, userChainA, userChainA);
+
+    bytes memory params = abi.encode(
+      address(vault),
+      asset,
+      amount,
+      actions,
+      args
+    );
 
     vm.startPrank(executor);
-    router.authorizedBridgeCall(
-      amount,
+
+    /*ERC20(connextTestToken).approve(address(router), type(uint256).max);*/
+    router.bridgeCall(
       domain == 3331 ? 1111 : 3331,
-      address(vault),
-      userChainA
+      params
     );
     assertEq(vault.balanceOf(userChainA), amount);
   }
