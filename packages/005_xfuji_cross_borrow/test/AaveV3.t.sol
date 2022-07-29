@@ -33,8 +33,10 @@ contract AaveV3Test is Test {
       providers
     );
 
-    user = 0x32d4703e5834F1b474B17DFdB0aC32Cc22575145;
+    user = vm.addr(1);
     vm.label(user, "user");
+
+    deal(depositToken, user, 1000e18);
   }
 
   function testZeroDepositBalance() public {
@@ -47,8 +49,8 @@ contract AaveV3Test is Test {
 
   function testDeposit() public {
     uint256 depositAmount = 1e18;
-    vm.startPrank(user);
 
+    vm.startPrank(user);
     IERC20(depositToken).approve(address(vault), depositAmount);
     vault.deposit(depositAmount, user);
 
