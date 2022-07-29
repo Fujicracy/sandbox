@@ -13,9 +13,9 @@ const TransactionsLogs = {
       comments: "Pending..might fail due to wrong destination domainId"
     },
     tx2: {
-      hash: "",
-      transferId: "",
-      comments: ""
+      hash: "0xa41b07a21014920ea1a108ebe8fece96f58cedbca6ebb56d709b643efcfb0419",
+      transferId: "0xc09872bcb07c1a626ef1192a0376d1741a055b6a2bcae85967556c6322e0f9d7",
+      comments: "Pending. cross-ping goerli => rinkeby"
     }
   },
   rinkeby: {
