@@ -12,6 +12,11 @@ const TransactionsLogs = {
       transferId: "0x463a784f863a83155529f8a368cd3f27cf0dac57c94c795207525e1b92d3e87a",
       comments: "Pending..might fail due to wrong destination domainId"
     },
+    tx2: {
+      hash: "",
+      transferId: "",
+      comments: ""
+    }
   },
   rinkeby: {
     tx0: {
@@ -19,5 +24,10 @@ const TransactionsLogs = {
       transferId: "0x97446f179053dae041e1ff624a153522ffdd3569bdd9afc2cb7c1c0a4b6f5900",
       comments: "Pending"
     },
+    tx1: {
+      hash: "0xdb7ec3db8d2ca94d6f25e554f750f7aec051b7b13873ea3df404419b13ce3364",
+      transferId: "0xeb352145389ef23efabe58be28f5c068bb7745401bcff87e08e1f564ef3d91b3",
+      comments: "Pending. Cross-ping rinkeby => goerli"
+    }
   }
 }

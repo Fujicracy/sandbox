@@ -31,6 +31,7 @@
   "dependencies": {},
   "type": "commonjs",
   "scripts": {
-    "test": "hardhat run ./test/runTest.js"
+    "test": "hardhat run ./test/runTest.js",
+    "test:cross-ping": "hardhat --network goerli run ./test/crossPing.js"
   }
 }
