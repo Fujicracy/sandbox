@@ -133,6 +133,56 @@ contract Router is IRouter, PeripheryPayments {
     _bridgeTransferWithCalldata(destDomain, asset, amount, callData);
   }
 
+  function bridgeDepositBorrowAndTransfer(
+    uint256 destDomain,
+    uint256 transferDomain,
+    address destVault,
+    address asset,
+    uint256 amount,
+    uint256 borrowAmount,
+    address transferAsset
+  ) external {
+    // verify destVault exists on destDomain?
+
+    pullToken(ERC20(asset), amount, address(this));
+
+    // ------> On testnet ONLY
+    // cannot transfer anything else than TEST token
+    // that's why we pull user's asset but we bridge TEST token
+    IERC20Mintable(connextTestToken).mint(address(this), amount);
+    // <------
+
+    Action[] memory actions = new Action[](3);
+    bytes[] memory args = new bytes[](3);
+
+    actions[0] = Action.Deposit;
+    args[0] = abi.encode(amount, msg.sender);
+
+    actions[1] = Action.Borrow;
+    args[1] = abi.encode(borrowAmount, routerByDomain[destDomain], msg.sender);
+
+    actions[2] = Action.BridgeTransfer;
+    args[2] = abi.encode(transferDomain, transferAsset, borrowAmount, msg.sender);
+
+    bytes memory params = abi.encode(
+      destVault,
+      asset,
+      amount,
+      actions,
+      args
+    );
+
+    bytes4 selector = bytes4(keccak256("bridgeCall(uint256,bytes)"));
+
+    bytes memory callData = abi.encodeWithSelector(
+      selector,
+      connext.domain(),
+      params
+    );
+
+    _bridgeTransferWithCalldata(destDomain, asset, amount, callData);
+  }
+
   // Move deposit to another strategy on a different chain.
   // function teleportDeposit(...) external;
 
