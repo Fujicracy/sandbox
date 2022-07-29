@@ -36,7 +36,7 @@ contract AaveV3Test is Test {
     user = vm.addr(1);
     vm.label(user, "user");
 
-    deal(depositToken, user, 1000e18);
+    deal(depositToken, user, 1000 ether);
   }
 
   function testZeroDepositBalance() public {
@@ -48,7 +48,7 @@ contract AaveV3Test is Test {
   }
 
   function testDeposit() public {
-    uint256 depositAmount = 1e18;
+    uint256 depositAmount = 1 ether;
 
     vm.startPrank(user);
     IERC20(depositToken).approve(address(vault), depositAmount);
