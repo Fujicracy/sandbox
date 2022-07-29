@@ -290,7 +290,7 @@ contract Vault is ERC4626 {
     address asset = debtAsset();
     _executeProviderAction(asset, assets, "borrow");
 
-    SafeERC20.safeTransferFrom(IERC20(asset), receiver, address(this), assets);
+    SafeERC20.safeTransfer(IERC20(asset), receiver, assets);
 
     emit Borrow(caller, owner, assets, shares);
   }

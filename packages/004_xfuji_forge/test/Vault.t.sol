@@ -140,4 +140,21 @@ contract VaultTest is DSTestPlus {
     assertEq(vault.balanceOf(userChainA), 0);
     assertEq(weth.balanceOf(userChainA), amount);
   }
+
+  function testDepositAndBorrowFromRouter() public {
+    address userChainA = address(0xA);
+    vm.label(address(userChainA), "userChainA");
+
+    uint256 amount = 2 ether;
+    uint256 debtAmount = 100_000_000;
+
+    IMintableWETH(address(weth)).mint(userChainA, amount);
+    assertEq(weth.balanceOf(userChainA), amount);
+
+    vm.startPrank(userChainA);
+
+    SafeTransferLib.safeApprove(weth, address(router), type(uint256).max);
+    router.depositAndBorrow(IVault(address(vault)), amount, debtAmount);
+    assertEq(ERC20(debtAsset).balanceOf(userChainA), debtAmount);
+  }
 }
