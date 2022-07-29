@@ -65,6 +65,23 @@ contract Vault is ERC4626, Ownable {
     emit Deposit(caller, receiver, assets, shares);
   }
 
+  /** @dev Overriden to perform _withdraw adding flow at lending provider {IERC4626-withdraw}. */
+  function _withdraw(
+    address caller,
+    address receiver,
+    address owner,
+    uint256 assets,
+    uint256 shares
+  ) internal override {
+    address asset = asset();
+
+    _burn(owner, shares);
+    _executeProviderAction(asset, assets, "withdraw");
+    SafeERC20.safeTransfer(IERC20(asset), receiver, assets);
+
+    emit Withdraw(caller, receiver, owner, assets, shares);
+  }
+
   ///////////////////////////
   /// Admin set functions ///
   ///////////////////////////
