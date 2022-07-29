@@ -59,6 +59,9 @@ contract Vault is ERC4626, Ownable {
     address asset = asset();
 
     SafeERC20.safeTransferFrom(IERC20(asset), caller, address(this), assets);
+    address spender = activeProvider.approvedOperator(asset);
+    SafeERC20.safeApprove(IERC20(asset), spender, assets);
+
     _executeProviderAction(asset, assets, "deposit");
     _mint(receiver, shares);
 
