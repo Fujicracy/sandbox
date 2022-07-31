@@ -1,0 +1,84 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import {Setup} from "./utils/Setup.sol";
+import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {IExecutor} from "nxtp/core/connext/interfaces/IExecutor.sol";
+import {IVault} from "../src/interfaces/IVault.sol";
+import {Vault, ERC20} from "../src/Vault.sol";
+import {Router} from "../src/Router.sol";
+
+interface IMintable {
+  function mint(address, uint256) external;
+}
+
+contract RouterTestsSuit is Setup {
+
+  function testBridgeOutbound() public {
+    address userChainA = address(0xA);
+    vm.label(address(userChainA), "userChainA");
+
+    uint256 amount = 2 ether;
+    uint256 borrowAmount = 1000_000_000;
+    IMintable(address(weth)).mint(userChainA, amount);
+    assertEq(weth.balanceOf(userChainA), amount);
+
+    vm.startPrank(userChainA);
+
+    SafeTransferLib.safeApprove(weth, address(router), type(uint256).max);
+    uint256 domain = connextHandler.domain();
+    router.bridgeDepositAndBorrow(
+      domain == 3331 ? 1111 : 3331,
+      address(vault),
+      address(weth),
+      amount,
+      borrowAmount
+    );
+  }
+
+  function testBridgeInbound() public {
+    address userChainA = address(0xA);
+    uint256 amount = 2 ether;
+    uint256 borrowAmount = 1000_000_000;
+
+    uint256 domain = connextHandler.domain();
+    address executor = address(connextHandler.executor());
+
+    vm.mockCall(
+      executor,
+      abi.encodeWithSelector(IExecutor(executor).originSender.selector),
+      abi.encode(address(0xAbc1))
+    );
+    vm.mockCall(
+      executor,
+      abi.encodeWithSelector(IExecutor(executor).origin.selector),
+      abi.encode(domain == 3331 ? 1111 : 3331)
+    );
+    IMintable(connextTestToken).mint(executor, amount);
+
+    Router.Action[] memory actions = new Router.Action[](2);
+    actions[0] = Router.Action.Deposit;
+    actions[1] = Router.Action.Borrow;
+
+    bytes[] memory args = new bytes[](2);
+    args[0] = abi.encode(amount, userChainA);
+    args[1] = abi.encode(borrowAmount, userChainA, userChainA);
+
+    bytes memory params = abi.encode(
+      address(vault),
+      asset,
+      amount,
+      actions,
+      args
+    );
+
+    vm.startPrank(executor);
+
+    /*ERC20(connextTestToken).approve(address(router), type(uint256).max);*/
+    router.bridgeCall(
+      domain == 3331 ? 1111 : 3331,
+      params
+    );
+    assertEq(vault.balanceOf(userChainA), amount);
+  }
+}
