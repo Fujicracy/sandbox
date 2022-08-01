@@ -46,16 +46,26 @@ contract Vault is ERC4626, Ownable {
   ///////////////////////////////////////////////
 
   modifier onlyRouter() {
-    require(msg.sender == router);
+    require(msg.sender == router, "Only router");
     _;
   }
 
   function deposit(uint256 assets, address receiver) public override onlyRouter returns (uint256) {
-    return super.deposit(assets, receiver);
+    require(assets <= maxDeposit(receiver), "ERC4626: deposit more than max");
+
+    uint256 shares = previewDeposit(assets);
+    _deposit(receiver, receiver, assets, shares);
+
+    return shares;
   }
 
   function mint(uint256 shares, address receiver) public override onlyRouter returns (uint256) {
-    return super.mint(shares, receiver);
+    require(shares <= maxMint(receiver), "ERC4626: mint more than max");
+
+    uint256 assets = previewMint(shares);
+    _deposit(receiver, receiver, assets, shares);
+
+    return assets;
   }
 
   function withdraw(
@@ -63,7 +73,12 @@ contract Vault is ERC4626, Ownable {
     address receiver,
     address owner
   ) public override onlyRouter returns (uint256) {
-    return super.withdraw(assets, receiver, owner);
+    require(assets <= maxWithdraw(owner), "ERC4626: withdraw more than max");
+
+    uint256 shares = previewWithdraw(assets);
+    _withdraw(receiver, receiver, owner, assets, shares);
+
+    return shares;
   }
 
   function redeem(
@@ -71,7 +86,12 @@ contract Vault is ERC4626, Ownable {
     address receiver,
     address owner
   ) public override onlyRouter returns (uint256) {
-    return super.redeem(shares, receiver, owner);
+    require(shares <= maxRedeem(owner), "ERC4626: redeem more than max");
+
+    uint256 assets = previewRedeem(shares);
+    _withdraw(receiver, receiver, owner, assets, shares);
+
+    return assets;
   }
 
   ///////////////////////////////////////////////

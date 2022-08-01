@@ -5,7 +5,9 @@ import "forge-std/Test.sol";
 
 import "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import "@/Vault.sol";
+import "@/Router.sol";
 import "@/providers/AaveV3.sol";
+import "@/interfaces/IVault.sol";
 
 
 contract AaveV3Test is Test {
@@ -13,6 +15,7 @@ contract AaveV3Test is Test {
   address depositToken;
   address borrowToken;
 
+  Router router;
   Vault vault;
   IProvider provider;
 
@@ -24,14 +27,18 @@ contract AaveV3Test is Test {
     IProvider[] memory providers = new IProvider[](1);
     providers[0] = provider;
 
+    router = new Router();
+
     vault = new Vault(
       depositToken,
       borrowToken,
-      address(0),
+      address(router),
       75,
       80,
       providers
     );
+
+    router.addVault(address(vault));
 
     user = vm.addr(1);
     vm.label(user, "user");
@@ -52,7 +59,7 @@ contract AaveV3Test is Test {
 
     vm.startPrank(user);
     IERC20(depositToken).approve(address(vault), depositAmount);
-    vault.deposit(depositAmount, user);
+    router.deposit(IVault(address(vault)), depositAmount);
 
     assertEq(depositAmount, provider.getDepositBalance(depositToken, address(vault)));
   }
@@ -64,11 +71,11 @@ contract AaveV3Test is Test {
 
     vm.startPrank(user);
     IERC20(depositToken).approve(address(vault), depositAmount);
-    vault.deposit(depositAmount, user);
+    router.deposit(IVault(address(vault)), depositAmount);
 
     assertEq(IERC20(depositToken).balanceOf(user), balBefore - depositAmount);
 
-    vault.withdraw(depositAmount, user, user);
+    router.withdraw(IVault(address(vault)), depositAmount);
 
     assertEq(balBefore, IERC20(depositToken).balanceOf(user));
   }
