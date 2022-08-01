@@ -27,7 +27,7 @@ contract AaveV3Test is Test {
     IProvider[] memory providers = new IProvider[](1);
     providers[0] = provider;
 
-    router = new Router();
+    router = new Router(address(0));
 
     vault = new Vault(
       depositToken,
