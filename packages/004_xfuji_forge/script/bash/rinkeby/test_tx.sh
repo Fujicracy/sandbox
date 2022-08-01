@@ -18,3 +18,5 @@ cast_tx $WETH "approve(address,uint256)" $ROUTER $AMOUNT
 
 # call bridgeDepositAndBorrow
 cast_tx $ROUTER "bridgeDepositAndBorrow(uint256,address,address,uint256,uint256)" $GOERLI_DOMAIN $GOERLI_VAULT $WETH $AMOUNT $BORROW_AMOUNT
+
+#cast_tx $ROUTER "bridgeDepositBorrowAndTransfer(uint256,uint256,address,address,uint256,uint256,address)" $GOERLI_DOMAIN $RINKEBY_DOMAIN $GOERLI_VAULT $WETH $AMOUNT $BORROW_AMOUNT $DEBT_ASSET
