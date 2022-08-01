@@ -96,6 +96,7 @@ contract Router is IRouter, PeripheryPayments {
     uint256 borrowAmount
   ) external {
     // verify destVault exists on destDomain?
+    require(routerByDomain[destDomain] != address(0), "No router on dest domain");
 
     pullToken(ERC20(asset), amount, address(this));
 
@@ -201,8 +202,7 @@ contract Router is IRouter, PeripheryPayments {
 
     // TODO pull bridgedAsset whatever it is
     bridgedAsset;
-    // this pull makes the call from the executor to fail
-    /*pullToken(ERC20(connextTestToken), bridgedAmount, address(this));*/
+    pullToken(ERC20(connextTestToken), bridgedAmount, address(this));
 
     // -------> On testnet ONLY
     IERC20Mintable(address(WETH9)).mint(address(this), bridgedAmount);
