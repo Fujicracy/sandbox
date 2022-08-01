@@ -5,12 +5,39 @@ import "openzeppelin-contracts/access/Ownable.sol";
 import "./interfaces/IVault.sol";
 
 contract Router is Ownable {
-  IVault[] vaults;
+  
+  // connext domain id => xFuji Router address
+  mapping(uint256 => address) public routerByDomain;
+
+  // asset => vault
+  mapping(address => address) public vaultByAsset;
+
+  // vault => valid
+  mapping(address => bool) public validVault;
+
+  ///////////////////////////
+  /// Admin functions ///
+  ///////////////////////////
 
   function addVault(address vault) external onlyOwner {
     //TODO event
-    vaults.push(IVault(vault));
+    validVault[vault] = true;
+    vaultByAsset[IVault(vault).asset()] = vault;
   }
+
+  function addRouter(uint256 domain, address router) external onlyOwner {
+    //TODO event
+    routerByDomain[domain] = router;
+  }
+
+  ///////////////////////////
+  /// Cross chain magic ///
+  ///////////////////////////
+  /*function bridgePosition()*/
+
+  ///////////////////////////
+  /// Vault interactions ///
+  ///////////////////////////
 
   function deposit(IVault vault, uint256 assets) external {
     require(_isValidVault(vault), "Invalid vault");
@@ -32,13 +59,11 @@ contract Router is Ownable {
     vault.redeem(shares, msg.sender, msg.sender);
   }
 
+  ///////////////////////////
+  /// Internal functions ///
+  ///////////////////////////
+
   function _isValidVault(IVault vault) internal view returns (bool isValid) {
-    isValid = false;
-    for (uint256 i = 0; i < vaults.length; i++) {
-      if (vaults[i] == vault) {
-        isValid = true;
-        break;
-      }
-    }
+    isValid = validVault[address(vault)];
   }
 }
