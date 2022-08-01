@@ -9,7 +9,7 @@ import "./interfaces/IProvider.sol";
 contract Vault is ERC4626, Ownable {
   using Address for address;
 
-  /*IRouter public router;*/
+  address public router;
 
   uint16 public maxLtv;
   uint16 public liqRatio;
@@ -33,12 +33,45 @@ contract Vault is ERC4626, Ownable {
       string(abi.encodePacked("fx", IERC20Metadata(_asset).symbol(), "-", IERC20Metadata(_debtAsset).symbol()))
     )
   {
-    /*router = IRouter(_router);*/
+    router = _router;
     maxLtv = _maxLtv;
     liqRatio = _liqRatio;
 
     setProviders(_providers);
     setActiveProvider(_providers[0]);
+  }
+
+  ///////////////////////////////////////////////
+  /// Interactions from Router only ///
+  ///////////////////////////////////////////////
+
+  modifier onlyRouter() {
+    require(msg.sender == router);
+    _;
+  }
+
+  function deposit(uint256 assets, address receiver) public override onlyRouter returns (uint256) {
+    return super.deposit(assets, receiver);
+  }
+
+  function mint(uint256 shares, address receiver) public override onlyRouter returns (uint256) {
+    return super.mint(shares, receiver);
+  }
+
+  function withdraw(
+    uint256 assets,
+    address receiver,
+    address owner
+  ) public override onlyRouter returns (uint256) {
+    return super.withdraw(assets, receiver, owner);
+  }
+
+  function redeem(
+    uint256 shares,
+    address receiver,
+    address owner
+  ) public override onlyRouter returns (uint256) {
+    return super.redeem(shares, receiver, owner);
   }
 
   ///////////////////////////////////////////////
