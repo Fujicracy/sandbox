@@ -5,13 +5,15 @@ import "openzeppelin-contracts/access/Ownable.sol";
 import "./interfaces/IVault.sol";
 import "./interfaces/connext/IConnext.sol";
 import "./interfaces/connext/ITest.sol";
+import "./interfaces/connext/IExecutor.sol";
 
 contract Router is Ownable {
   IConnext public immutable connext;
+  IExecutor public executor;
   address public testToken;
   
   // connext domain id => xFuji Router address
-  mapping(uint256 => address) public routerByDomain;
+  mapping(uint32 => address) public routerByDomain;
 
   // asset => vault
   mapping(address => address) public vaultByAsset;
@@ -21,6 +23,7 @@ contract Router is Ownable {
 
   constructor(address _connext) {
     connext = IConnext(_connext);
+    executor = connext.executor();
   }
 
   ///////////////////////////
@@ -33,7 +36,7 @@ contract Router is Ownable {
     vaultByAsset[IVault(vault).asset()] = vault;
   }
 
-  function addRouter(uint256 domain, address router) external onlyOwner {
+  function addRouter(uint32 domain, address router) external onlyOwner {
     //TODO event
     routerByDomain[domain] = router;
   }
@@ -47,6 +50,21 @@ contract Router is Ownable {
   /// Cross chain magic ///
   ///////////////////////////
 
+  // A modifier for authenticated function calls.
+  // Note: This is an important security consideration. If your target
+  //       contract function is meant to be authenticated, it must check
+  //       that the originating call is from the correct domain and contract.
+  //       Also, check that the msg.sender is the Connext Executor address.
+  modifier onlyExecutor(uint32 originDomain) {
+    require(
+      IExecutor(msg.sender).originSender() == routerByDomain[originDomain] &&
+        IExecutor(msg.sender).origin() == originDomain &&
+        msg.sender == address(executor),
+      "Expected origin contract on origin domain called by Executor"
+    );
+    _;
+  }
+
   function bridgePosition(address asset, address assetTarget, uint256 amount, uint32 targetDomain) external {
     require(routerByDomain[targetDomain] != address(0));
 
@@ -59,8 +77,8 @@ contract Router is Ownable {
 
     // Bridging logic
 
-    bytes4 selector = bytes4(keccak256("targetBridgePosition(address,uint256,uint32)"));
-    bytes memory callData = abi.encodeWithSelector(selector, assetTarget, amount, uint32(connext.domain));
+    bytes4 selector = bytes4(keccak256("targetBridgePosition(address,address,uint256,uint32)"));
+    bytes memory callData = abi.encodeWithSelector(selector, msg.sender, assetTarget, amount, uint32(connext.domain()));
 
     IConnext.CallParams memory callParams = IConnext.CallParams({
       to: routerByDomain[targetDomain],
@@ -86,8 +104,11 @@ contract Router is Ownable {
     connext.xcall(xcallArgs);
   }
 
-  function targetBridgePosition(address asset, uint256 amount, uint32 originDomain) external {
+  function targetBridgePosition(address user, address asset, uint256 amount, uint32 originDomain) external onlyExecutor(originDomain) {
+    IVault vault = IVault(vaultByAsset[asset]);
+    require(_isValidVault(vault), "Invalid vault");
 
+    vault.deposit(amount, user);
   }
 
   ///////////////////////////
