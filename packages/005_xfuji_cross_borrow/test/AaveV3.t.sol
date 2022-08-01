@@ -56,4 +56,20 @@ contract AaveV3Test is Test {
 
     assertEq(depositAmount, provider.getDepositBalance(depositToken, address(vault)));
   }
+
+  function testWithdraw() public {
+    uint256 depositAmount = 1 ether;
+
+    uint256 balBefore = IERC20(depositToken).balanceOf(user);
+
+    vm.startPrank(user);
+    IERC20(depositToken).approve(address(vault), depositAmount);
+    vault.deposit(depositAmount, user);
+
+    assertEq(IERC20(depositToken).balanceOf(user), balBefore -depositAmount);
+
+    vault.withdraw(depositAmount, user, user);
+
+    assertEq(balBefore, IERC20(depositToken).balanceOf(user));
+  }
 }
