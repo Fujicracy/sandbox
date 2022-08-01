@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 
 import "openzeppelin-contracts/token/ERC20/IERC20.sol";
-import "../src/Vault.sol";
-import "../src/providers/AaveV3.sol";
+import "@/Vault.sol";
+import "@/providers/AaveV3.sol";
 
 
 contract AaveV3Test is Test {
@@ -66,7 +66,7 @@ contract AaveV3Test is Test {
     IERC20(depositToken).approve(address(vault), depositAmount);
     vault.deposit(depositAmount, user);
 
-    assertEq(IERC20(depositToken).balanceOf(user), balBefore -depositAmount);
+    assertEq(IERC20(depositToken).balanceOf(user), balBefore - depositAmount);
 
     vault.withdraw(depositAmount, user, user);
 
