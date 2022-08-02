@@ -10,7 +10,7 @@ import "@/providers/AaveV3.sol";
 import "@/interfaces/IVault.sol";
 
 
-contract AaveV3Test is Test {
+abstract contract AaveV3TestSuit is Test {
   address user;
   address depositToken;
   address borrowToken;
@@ -19,15 +19,17 @@ contract AaveV3Test is Test {
   Vault vault;
   IProvider provider;
 
-  function setUp() public {
-    provider = new AaveV3(0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb);
-    depositToken = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
-    borrowToken = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+  constructor(address _addressProvider, address _depositToken, address _borrowToken) {
+    provider = new AaveV3(_addressProvider);
+    depositToken = _depositToken;
+    borrowToken = _borrowToken;
+  }
 
+  function setUp() public {
     IProvider[] memory providers = new IProvider[](1);
     providers[0] = provider;
 
-    router = new Router(address(0));
+    router = new Router(0x6c9a905Ab3f4495E2b47f5cA131ab71281E0546e);
 
     vault = new Vault(
       depositToken,
