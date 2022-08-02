@@ -73,8 +73,9 @@ contract XRouterTestsSuite is Setup {
     );
 
     vm.startPrank(executor);
+    // execute() function of the executor contains approval
+    ERC20(connextTestToken).approve(address(router), type(uint256).max);
 
-    /*ERC20(connextTestToken).approve(address(router), type(uint256).max);*/
     router.bridgeCall(
       domain == 3331 ? 1111 : 3331,
       params
