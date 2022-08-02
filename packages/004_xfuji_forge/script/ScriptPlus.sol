@@ -13,4 +13,21 @@ contract ScriptPlus is Script {
     }
     vm.writeLine(path, vm.toString(addr));
   }
+
+  function saveAddressEncoded(string memory path, address addr) internal {
+    try vm.removeFile(path) {
+    } catch {
+      console.log(string(abi.encodePacked("Creating a new encoded record at ", path)));
+    }
+    vm.writeLine(path, vm.toString(abi.encode(addr)));
+  }
+
+  function getAddress(string memory path) internal returns (address addr) {
+    string[] memory inputs = new string[](2);
+    inputs[0] = "cat";
+    inputs[1] = path;
+    bytes memory res = vm.ffi(inputs);
+
+    addr = abi.decode(res, (address));
+  }
 }
