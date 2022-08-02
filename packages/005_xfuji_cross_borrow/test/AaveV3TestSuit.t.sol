@@ -14,22 +14,32 @@ abstract contract AaveV3TestSuit is Test {
   address user;
   address depositToken;
   address borrowToken;
+  address connext;
+  address testToken;
 
   Router router;
   Vault vault;
   IProvider provider;
 
-  constructor(address _addressProvider, address _depositToken, address _borrowToken) {
+  constructor(
+    address _addressProvider, 
+    address _depositToken, 
+    address _borrowToken,
+    address _connext,
+    address _testToken
+  ) {
     provider = new AaveV3(_addressProvider);
     depositToken = _depositToken;
     borrowToken = _borrowToken;
+    connext = _connext;
+    testToken = _testToken;
   }
 
   function setUp() public {
     IProvider[] memory providers = new IProvider[](1);
     providers[0] = provider;
 
-    router = new Router(0x6c9a905Ab3f4495E2b47f5cA131ab71281E0546e);
+    router = new Router(connext);
 
     vault = new Vault(
       depositToken,
@@ -41,6 +51,7 @@ abstract contract AaveV3TestSuit is Test {
     );
 
     router.addVault(address(vault));
+    router.setTestToken(testToken);
 
     user = vm.addr(1);
     vm.label(user, "user");
