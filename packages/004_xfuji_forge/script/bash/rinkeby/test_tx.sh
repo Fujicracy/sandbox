@@ -8,7 +8,7 @@ USER_ADDR=$(cast wallet address --private-key $PRIVATE_KEY | grep 'Address:' | a
 AMOUNT=$(cast --to-wei 10)
 BORROW_AMOUNT=1000000000
 
-ROUTER=$(cat ./deployments/rinkeby/Router)
+ROUTER=$(cat ./deployments/rinkeby/XRouter)
 
 # mint some WETH
 cast_tx $WETH "mint(address,uint256)" $USER_ADDR $AMOUNT

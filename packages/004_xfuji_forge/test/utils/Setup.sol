@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 import {IConnextHandler} from "nxtp/core/connext/interfaces/IConnextHandler.sol";
 import {Vault} from "../../src/Vault.sol";
-import {Router} from "../../src/Router.sol";
+import {XRouter} from "../../src/XRouter.sol";
 import {IWETH9} from "../../src/helpers/PeripheryPayments.sol";
 import {AaveV3Goerli} from "../../src/providers/goerli/AaveV3Goerli.sol";
 import {AaveV3Rinkeby} from "../../src/providers/rinkeby/AaveV3Rinkeby.sol";
@@ -35,7 +35,7 @@ contract Setup is DSTestPlus {
   mapping(uint256 => Registry) public registry;
 
   Vault public vault;
-  Router public router;
+  XRouter public router;
   ILendingProvider public aaveV3;
 
   IWETH9 public weth;
@@ -89,7 +89,7 @@ contract Setup is DSTestPlus {
     } else {
       aaveV3 = new AaveV3Rinkeby();
     }
-    router = new Router(
+    router = new XRouter(
       IWETH9(reg.weth),
       IConnextHandler(reg.connextHandler)
     );

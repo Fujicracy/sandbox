@@ -12,7 +12,7 @@ import "./helpers/PeripheryPayments.sol";
 // TODO inherit from SelfPermit, Multicall
 // for additional functionalitites
 // ref: https://github.com/fei-protocol/ERC4626/blob/main/src/ERC4626RouterBase.sol
-contract Router is IRouter, PeripheryPayments {
+contract XRouter is IRouter, PeripheryPayments {
   IConnextHandler public connext;
   IExecutor public executor;
 
@@ -44,6 +44,7 @@ contract Router is IRouter, PeripheryPayments {
 
   // -------> On testnet ONLY
   address public connextTestToken;
+
   // <------
 
   constructor(IWETH9 weth, IConnextHandler connext_) PeripheryPayments(weth) {
@@ -115,21 +116,11 @@ contract Router is IRouter, PeripheryPayments {
     actions[1] = Action.Borrow;
     args[1] = abi.encode(borrowAmount, msg.sender, msg.sender);
 
-    bytes memory params = abi.encode(
-      destVault,
-      asset,
-      amount,
-      actions,
-      args
-    );
+    bytes memory params = abi.encode(destVault, asset, amount, actions, args);
 
     bytes4 selector = bytes4(keccak256("bridgeCall(uint256,bytes)"));
 
-    bytes memory callData = abi.encodeWithSelector(
-      selector,
-      connext.domain(),
-      params
-    );
+    bytes memory callData = abi.encodeWithSelector(selector, connext.domain(), params);
 
     _bridgeTransferWithCalldata(destDomain, asset, amount, callData);
   }
@@ -165,21 +156,11 @@ contract Router is IRouter, PeripheryPayments {
     actions[2] = Action.BridgeTransfer;
     args[2] = abi.encode(transferDomain, transferAsset, borrowAmount, msg.sender);
 
-    bytes memory params = abi.encode(
-      destVault,
-      asset,
-      amount,
-      actions,
-      args
-    );
+    bytes memory params = abi.encode(destVault, asset, amount, actions, args);
 
     bytes4 selector = bytes4(keccak256("bridgeCall(uint256,bytes)"));
 
-    bytes memory callData = abi.encodeWithSelector(
-      selector,
-      connext.domain(),
-      params
-    );
+    bytes memory callData = abi.encodeWithSelector(selector, connext.domain(), params);
 
     _bridgeTransferWithCalldata(destDomain, asset, amount, callData);
   }
@@ -188,17 +169,17 @@ contract Router is IRouter, PeripheryPayments {
   // function teleportDeposit(...) external;
 
   // callable only from the bridge
-  function bridgeCall(
-    uint256 originDomain,
-    bytes memory params
-  ) external onlyConnextExecutor(originDomain) {
+  function bridgeCall(uint256 originDomain, bytes memory params)
+    external
+    onlyConnextExecutor(originDomain)
+  {
     (
       address vault,
       address bridgedAsset,
       uint256 bridgedAmount,
       Action[] memory actions,
       bytes[] memory args
-    ) = abi.decode(params, (address,address,uint256,Action[],bytes[]));
+    ) = abi.decode(params, (address, address, uint256, Action[], bytes[]));
 
     // TODO pull bridgedAsset whatever it is
     bridgedAsset;
@@ -211,20 +192,29 @@ contract Router is IRouter, PeripheryPayments {
     uint256 len = actions.length;
     for (uint256 i = 0; i < len; i++) {
       if (actions[i] == Action.Deposit) {
-        (uint256 amount, address receiver) = abi.decode(args[i], (uint256,address));
+        (uint256 amount, address receiver) = abi.decode(args[i], (uint256, address));
         IVault(vault).deposit(amount, receiver);
       } else if (actions[i] == Action.Withdraw) {
-        (uint256 amount, address receiver, address owner) = abi.decode(args[i], (uint256,address,address));
+        (uint256 amount, address receiver, address owner) = abi.decode(
+          args[i],
+          (uint256, address, address)
+        );
         IVault(vault).withdraw(amount, receiver, owner);
       } else if (actions[i] == Action.Borrow) {
-        (uint256 amount, address receiver, address owner) = abi.decode(args[i], (uint256,address,address));
+        (uint256 amount, address receiver, address owner) = abi.decode(
+          args[i],
+          (uint256, address, address)
+        );
         IVault(vault).borrow(amount, receiver, owner);
       } else if (actions[i] == Action.Payback) {
-        (uint256 amount, address receiver) = abi.decode(args[i], (uint256,address));
+        (uint256 amount, address receiver) = abi.decode(args[i], (uint256, address));
         IVault(vault).payback(amount, receiver);
       } else if (actions[i] == Action.BridgeTransfer) {
-        (uint256 domain, address asset, uint256 amount, address receiver) = abi.decode(args[i], (uint256,address,uint256,address));
-        _bridgeTransfer(domain, asset, amount, receiver); 
+        (uint256 domain, address asset, uint256 amount, address receiver) = abi.decode(
+          args[i],
+          (uint256, address, uint256, address)
+        );
+        _bridgeTransfer(domain, asset, amount, receiver);
       }
     }
   }
@@ -312,6 +302,7 @@ contract Router is IRouter, PeripheryPayments {
     connextTestToken = token;
     approve(ERC20(token), address(connext), type(uint256).max);
   }
+
   // <------
 
   function registerVault(IVault vault) external {

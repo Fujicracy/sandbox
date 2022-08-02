@@ -4,7 +4,7 @@
 
 AAVE_V3=$(cat ./deployments/rinkeby/AaveV3Rinkeby)
 
-ROUTER=$(cat ./deployments/rinkeby/Router)
+ROUTER=$(cat ./deployments/rinkeby/XRouter)
 
 deploy_contract Vault --constructor-args $ASSET $DEBT_ASSET $ORACLE $ROUTER
 

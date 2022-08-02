@@ -6,14 +6,14 @@ import {ScriptPlus} from "./ScriptPlus.sol";
 import {IConnextHandler} from "nxtp/core/connext/interfaces/IConnextHandler.sol";
 import {IVault} from "../src/interfaces/IVault.sol";
 import {Vault, ERC20} from "../src/Vault.sol";
-import {Router} from "../src/Router.sol";
+import {XRouter} from "../src/XRouter.sol";
 import {IWETH9} from "../src/helpers/PeripheryPayments.sol";
 import {AaveV3Rinkeby} from "../src/providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
 
 contract DeployRinkeby is ScriptPlus {
   Vault public vault;
-  Router public router;
+  XRouter public router;
   ILendingProvider public aaveV3;
 
   IWETH9 public weth;
@@ -40,8 +40,8 @@ contract DeployRinkeby is ScriptPlus {
     aaveV3 = new AaveV3Rinkeby();
     saveAddress("./deployments/rinkeby/AaveV3Rinkeby", address(aaveV3));
 
-    router = new Router(weth, connextHandler);
-    saveAddress("./deployments/rinkeby/Router", address(router));
+    router = new XRouter(weth, connextHandler);
+    saveAddress("./deployments/rinkeby/XRouter", address(router));
 
     vault = new Vault(
       asset,

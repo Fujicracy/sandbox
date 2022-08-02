@@ -6,7 +6,7 @@ import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {IExecutor} from "nxtp/core/connext/interfaces/IExecutor.sol";
 import {IVault} from "../src/interfaces/IVault.sol";
 import {Vault, ERC20} from "../src/Vault.sol";
-import {Router} from "../src/Router.sol";
+import {XRouter} from "../src/XRouter.sol";
 
 interface IMintable {
   function mint(address, uint256) external;
@@ -56,9 +56,9 @@ contract RouterTestsSuit is Setup {
     );
     IMintable(connextTestToken).mint(executor, amount);
 
-    Router.Action[] memory actions = new Router.Action[](2);
-    actions[0] = Router.Action.Deposit;
-    actions[1] = Router.Action.Borrow;
+    XRouter.Action[] memory actions = new XRouter.Action[](2);
+    actions[0] = XRouter.Action.Deposit;
+    actions[1] = XRouter.Action.Borrow;
 
     bytes[] memory args = new bytes[](2);
     args[0] = abi.encode(amount, userChainA);

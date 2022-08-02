@@ -11,7 +11,6 @@ import "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
 import "./ILendingProvider.sol";
 
 interface IVault is IERC4626 {
-
   function debtAsset() external view returns (address);
 
   /**
