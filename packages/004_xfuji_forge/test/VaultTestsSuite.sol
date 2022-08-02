@@ -10,7 +10,7 @@ interface IMintable {
   function mint(address, uint256) external;
 }
 
-contract VaultTestsSuit is Setup {
+contract VaultTestsSuite is Setup {
 
   function testConfigs() public {
     assertEq(vault.asset(), asset);

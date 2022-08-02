@@ -12,7 +12,7 @@ interface IMintable {
   function mint(address, uint256) external;
 }
 
-contract RouterTestsSuit is Setup {
+contract XRouterTestsSuite is Setup {
 
   function testBridgeOutbound() public {
     address userChainA = address(0xA);

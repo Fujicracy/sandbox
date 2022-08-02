@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {RouterTestsSuit} from "../RouterTestsSuit.sol";
+import {XRouterTestsSuite} from "../XRouterTestsSuite.sol";
 
-contract RouterTest is RouterTestsSuit {
+contract XRouterTest is XRouterTestsSuite {
 
   function setUp() public {
     vm.selectFork(rinkebyFork);
