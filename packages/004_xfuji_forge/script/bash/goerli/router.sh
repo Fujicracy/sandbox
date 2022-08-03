@@ -6,4 +6,8 @@ deploy_contract XRouter --constructor-args $WETH $CONNEXT_HANDLER
 
 ROUTER=$(cat ./deployments/goerli/XRouter)
 
+VAULT=$(cat ./deployments/goerli/Vault)
+
 cast_tx $ROUTER "setTestnetToken(address)" $TEST_TOKEN
+
+cast_tx $ROUTER "registerVault(address)" $VAULT
