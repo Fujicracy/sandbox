@@ -11,7 +11,7 @@ contract DeployGoerli is Script {
   function setUp() public { }
 
   function run() public {
-    vm.broadcast();
+    vm.startBroadcast();
 
     IProvider[] memory providers = new IProvider[](1);
     providers[0] = new AaveV3(0xc4dCB5126a3AfEd129BC3668Ea19285A9f56D15D);
