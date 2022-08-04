@@ -69,7 +69,7 @@ contract Router is Ownable {
   function bridgePosition(address asset, address assetTarget, uint256 amount, uint32 targetDomain) external {
     require(routerByDomain[targetDomain] != address(0));
 
-    IVault vault = vaultByAsset[asset];
+    IVault vault = IVault(vaultByAsset[asset]);
     require(_isValidVault(vault), "Invalid vault");
 
     // Withdrawing posigion
@@ -110,7 +110,7 @@ contract Router is Ownable {
     IVault vault = IVault(vaultByAsset[asset]);
     require(_isValidVault(vault), "Invalid vault");
 
-    IERC20 test = IERC20(testToken);
+    ITest test = ITest(testToken);
 
     // Pull tokens from executor
     test.transferFrom(msg.sender, address(this), amount);
