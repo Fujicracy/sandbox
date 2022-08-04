@@ -1,0 +1,12 @@
+{
+  "name": "hardhat-project",
+  "version": "1.0.0",
+  "description": "Testing simple permit functions",
+  "main": "index.js",
+  "author": "DCota",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "hardhat": "^2.10.1"
+  }
+}

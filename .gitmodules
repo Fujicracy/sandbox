@@ -4,3 +4,9 @@
 [submodule "packages/002_forge_sample/lib/openzeppelin-contracts"]
 	path = packages/002_forge_sample/lib/openzeppelin-contracts
 	url = https://github.com/Openzeppelin/openzeppelin-contracts
+[submodule "packages/006_simple_permit/lib/forge-std"]
+	path = packages/006_simple_permit/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "packages/006_simple_permit/lib/openzeppelin-contracts"]
+	path = packages/006_simple_permit/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
