@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "openzeppelin-contracts/access/Ownable.sol";
+import "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import "./interfaces/IVault.sol";
 import "./interfaces/connext/IConnext.sol";
 import "./interfaces/connext/ITest.sol";
@@ -68,15 +69,16 @@ contract Router is Ownable {
   function bridgePosition(address asset, address assetTarget, uint256 amount, uint32 targetDomain) external {
     require(routerByDomain[targetDomain] != address(0));
 
+    IVault vault = vaultByAsset[asset];
+    require(_isValidVault(vault), "Invalid vault");
+
     // Withdrawing posigion
-    IVault(vaultByAsset[asset]).withdraw(amount, address(this), msg.sender);
+    vault.withdraw(amount, address(this), msg.sender);
     // We burn the token and mint $TEST because connext does not support bridigng other than $TEST
     //TODO BURN TOKEN
     ITest(testToken).mint(address(this), amount);
 
-
     // Bridging logic
-
     bytes4 selector = bytes4(keccak256("targetBridgePosition(address,address,uint256,uint32)"));
     bytes memory callData = abi.encodeWithSelector(selector, msg.sender, assetTarget, amount, uint32(connext.domain()));
 
@@ -107,6 +109,15 @@ contract Router is Ownable {
   function targetBridgePosition(address user, address asset, uint256 amount, uint32 originDomain) external onlyExecutor(originDomain) {
     IVault vault = IVault(vaultByAsset[asset]);
     require(_isValidVault(vault), "Invalid vault");
+
+    IERC20 test = IERC20(testToken);
+
+    // Pull tokens from executor
+    test.transferFrom(msg.sender, address(this), amount);
+
+    // We burn the $TEST and mint token because connext does not support bridigng other than $TEST
+    test.burn(address(this), amount);
+    //TODO mint tokens
 
     vault.deposit(amount, user);
   }
