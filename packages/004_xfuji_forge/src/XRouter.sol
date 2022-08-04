@@ -34,8 +34,9 @@ contract XRouter is IRouter, PeripheryPayments {
   //       Also, check that the msg.sender is the Connext Executor address.
   modifier onlyConnextExecutor(uint256 originDomain) {
     require(
-      IExecutor(msg.sender).originSender() == routerByDomain[originDomain] &&
-        IExecutor(msg.sender).origin() == uint32(originDomain) &&
+      // TODO subject to change in the new version of amarok
+      /*IExecutor(msg.sender).originSender() == routerByDomain[originDomain] &&*/
+        /*IExecutor(msg.sender).origin() == uint32(originDomain) &&*/
         msg.sender == address(executor),
       "Expected origin contract on origin domain called by Executor"
     );
@@ -89,6 +90,27 @@ contract XRouter is IRouter, PeripheryPayments {
     vaultTo.deposit(amount, msg.sender);
   }
 
+  // 1. Deposit and Borrow on origin chain
+  // 2. Bridge borrowed asset to dest chain
+  function depositBorrowAndBridge(
+    uint256 destDomain,
+    IVault vault,
+    uint256 amount,
+    uint256 borrowAmount
+  ) external {
+    // TODO verify vault
+    require(routerByDomain[destDomain] != address(0), "No router on dest domain");
+
+    pullToken(ERC20(vault.asset()), amount, address(this));
+
+    vault.deposit(amount, msg.sender);
+    vault.borrow(borrowAmount, address(this), msg.sender);
+
+    _bridgeTransfer(destDomain, vault.debtAsset(), borrowAmount, msg.sender);
+  }
+
+  // 1. Bridge collateral asset to dest chain
+  // 2. Deposit and Borrow on dest chain
   function bridgeDepositAndBorrow(
     uint256 destDomain,
     address destVault,
@@ -125,6 +147,10 @@ contract XRouter is IRouter, PeripheryPayments {
     _bridgeTransferWithCalldata(destDomain, asset, amount, callData);
   }
 
+  // NOTE: This doesn't work because of Connext reentrancy guard
+  // 1. Bridge collateral asset to dest chain
+  // 2. Deposit and Borrow on dest chain
+  // 3. Transfer borrowed asset to 3rd chain
   function bridgeDepositBorrowAndTransfer(
     uint256 destDomain,
     uint256 transferDomain,
@@ -183,7 +209,11 @@ contract XRouter is IRouter, PeripheryPayments {
 
     // TODO pull bridgedAsset whatever it is
     bridgedAsset;
-    pullToken(ERC20(connextTestToken), bridgedAmount, address(this));
+    // If using fast liquidity "bridgedAmount" will be less than the one passed
+    // from origin domain because of the fees. That's why in pullTokens we
+    // have to account for the fee. If we are using sposored vaults, we don't
+    // need to handle it here.
+    /*pullToken(ERC20(connextTestToken), bridgedAmount, address(this));*/
 
     // -------> On testnet ONLY
     IERC20Mintable(address(WETH9)).mint(address(this), bridgedAmount);
@@ -225,6 +255,12 @@ contract XRouter is IRouter, PeripheryPayments {
     uint256 amount,
     address receiver
   ) internal {
+    // ------> On testnet ONLY
+    // cannot transfer anything else than TEST token
+    // that's why we need to mint some TEST tokens
+    IERC20Mintable(connextTestToken).mint(address(this), amount);
+    // <------
+
     CallParams memory callParams = CallParams({
       to: receiver,
       callData: "", // empty here because we're only sending funds
@@ -266,7 +302,7 @@ contract XRouter is IRouter, PeripheryPayments {
       destinationDomain: uint32(destDomain),
       agent: msg.sender, // address allowed to transaction on destination side in addition to relayers
       recovery: msg.sender, // fallback address to send funds to if execution fails on destination side
-      forceSlow: true, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
+      forceSlow: false, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
       receiveLocal: false, // option to receive the local Nomad-flavored asset instead of the adopted asset
       callback: address(0), // this contract implements the callback
       callbackFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
