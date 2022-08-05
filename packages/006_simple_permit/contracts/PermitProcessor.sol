@@ -4,8 +4,6 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 
-import "hardhat/console.sol";
-
 contract PermitProcessor {
     bytes32 private constant _PERMIT_TYPEHASH =
         keccak256(
