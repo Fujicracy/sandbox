@@ -4,3 +4,15 @@
 [submodule "packages/002_forge_sample/lib/openzeppelin-contracts"]
 	path = packages/002_forge_sample/lib/openzeppelin-contracts
 	url = https://github.com/Openzeppelin/openzeppelin-contracts
+[submodule "packages/004_xfuji_forge/lib/forge-std"]
+	path = packages/004_xfuji_forge/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "packages/004_xfuji_forge/lib/openzeppelin-contracts"]
+	path = packages/004_xfuji_forge/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts/
+[submodule "packages/004_xfuji_forge/lib/solmate"]
+	path = packages/004_xfuji_forge/lib/solmate
+	url = https://github.com/transmissions11/solmate
+[submodule "packages/004_xfuji_forge/lib/nxtp"]
+	path = packages/004_xfuji_forge/lib/nxtp
+	url = https://github.com/connext/nxtp
