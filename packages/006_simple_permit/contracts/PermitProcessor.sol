@@ -40,7 +40,8 @@ contract PermitProcessor {
         IERC20(mockTokenAddress).transfer(msg.sender, value);
     }
 
-    function permitMessage(
+    /** Helper function to build 'digest' that shall be signed by 'owner' */
+    function getPermitDigest(
         address owner,
         address spender,
         uint256 value,

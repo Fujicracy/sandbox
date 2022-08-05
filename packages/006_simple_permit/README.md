@@ -1,13 +1,18 @@
-# Sample Hardhat Project
+## Experiment 006_simple_permit
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+This experiment showcases how the permit() function is used in the context of ERC20:  
+1. Openzeppelin ERC20 extension implementation of permit is used to create a mock token. Such implementation integrates: [EIP2612](https://eips.ethereum.org/EIPS/eip-2612[EIP-2612]) and [EIP712](https://eips.ethereum.org/EIPS/eip-712)  
+2. An extra contract 'PermitProcessor' is created to showcase the execution of ERC20.permit() + ERC20.transferFrom() in one call. 
+3. Test scripts showcase how the permit is built with etherjs for the signer to sign message.
 
-Try running some of the following tasks:
+#### How to run test
+1. Set up an `.env` file with the following:
+- `PRIVATE_KEY_HARDHAT_TEST_SIGNER=<0x123456>` for a test user. You can get the private key of Hardhat's first signer by simply running: `npx hardhat node`
 
-```shell
-npx hardhat help
-npx hardhat test
-GAS_REPORT=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+2. Then run the following:
+- `yarn test`
+
+#### Notes
+
+- To see the implementation of how to build permit's 'digest' refer to getPermitDigest() in PermitProcessor.sol contract.
+- To see how the front-end will handle the permit 'digest' for signing refer to Tests No. 2, and Test No. 3 in `./test/permit_test.js`.

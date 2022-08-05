@@ -1,8 +1,13 @@
+require("dotenv").config();
 const { ethers } = require("hardhat");
 const {
   loadFixture,
 } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
+
+if (!process.env.PRIVATE_KEY_HARDHAT_TEST_SIGNER) {
+  throw "Please set PRIVATE_KEY_HARDHAT_TEST_SIGNER in .env";
+} 
 
 describe("Tests for TransferFrom with Permit", function () {
   // We define a fixture to reuse the same setup in every test.
@@ -21,7 +26,7 @@ describe("Tests for TransferFrom with Permit", function () {
     return { owner, otherAccount, token, processor };
   }
 
-  it("Should revert when calling transferFrom with no permit", async function () {
+  it("Test No. 1: Should revert when calling transferFrom with no permit", async function () {
     const { owner, otherAccount, token } = await loadFixture(deployTestFixture);
     const ownerBalance = await token.balanceOf(owner.address);
     const connectedToken = token.connect(otherAccount);
@@ -30,19 +35,24 @@ describe("Tests for TransferFrom with Permit", function () {
     expect(await token.balanceOf(otherAccount.address)).to.eq(0);
   });
 
-  it("Should revert when calling transferFrom with no permit", async function () {
+  it("Test No. 2: Succesfully execute transferFrom with permit - using ethersjs 'signDigest' method of a SigningKey class.", async function () {
     const { owner, otherAccount, token, processor } = await loadFixture(deployTestFixture);
     const ownerBalance = await token.balanceOf(owner.address);
     const deadline = ((await owner.provider.getBlock()).timestamp) + 60 * 60 // 1 hour to process permit;
-    const message = await processor.permitMessage(
+
+    // Using Etherjs 'signDigest' method of ethers.SigningKey class
+    // The goal is to obtain the v,r,s values.
+    // This method will probably not be used in production front-end.
+    const messageDigest = await processor.getPermitDigest(
       owner.address,
       processor.address,
       ownerBalance,
       deadline
     );
-    const ownerSigningKey = new ethers.utils.SigningKey('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
-    const ownerSignedMessage = await ownerSigningKey.signDigest(message);
-    const { v, r, s } = ethers.utils.splitSignature(ownerSignedMessage);
+    const ownerSigningKey = new ethers.utils.SigningKey(process.env.PRIVATE_KEY_HARDHAT_TEST_SIGNER);
+    const ownerSignedDigest = await ownerSigningKey.signDigest(messageDigest);
+    const { v, r, s } = ethers.utils.splitSignature(ownerSignedDigest);
+
     const connectedProcessor = processor.connect(otherAccount);
     await connectedProcessor.transferFromWithPermit(
       owner.address,
@@ -52,6 +62,37 @@ describe("Tests for TransferFrom with Permit", function () {
       v, r, s
     );
     expect(await token.balanceOf(otherAccount.address)).to.eq(ownerBalance);
+    expect(await token.balanceOf(owner.address)).to.eq(0);
+  });
+
+  it("Test No. 3: Succesfully execute transferFrom with permit - using ethersjs '_signTypedData' method of a Signer class", async function () {
+    const { owner, otherAccount, token, processor } = await loadFixture(deployTestFixture);
+    const ownerBalance = await token.balanceOf(owner.address);
+    const deadline = ((await owner.provider.getBlock()).timestamp) + 60 * 60 // 1 hour to process permit;
+
+    // Using Etherjs _signTypedData method of ethers.Signer class
+    // The goal is to obtain the v,r,s values.
+    // This method is in similarity on how browser wallets will process signature.
+    const messageDigest = await processor.getPermitDigest(
+      owner.address,
+      processor.address,
+      ownerBalance,
+      deadline
+    );
+    const ownerSigningKey = new ethers.utils.SigningKey(process.env.PRIVATE_KEY_HARDHAT_TEST_SIGNER);
+    const ownerSignedDigest = await ownerSigningKey.signDigest(messageDigest);
+    const { v, r, s } = ethers.utils.splitSignature(ownerSignedDigest);
+
+    const connectedProcessor = processor.connect(otherAccount);
+    await connectedProcessor.transferFromWithPermit(
+      owner.address,
+      processor.address,
+      ownerBalance,
+      deadline,
+      v, r, s
+    );
+    expect(await token.balanceOf(otherAccount.address)).to.eq(ownerBalance);
+    expect(await token.balanceOf(owner.address)).to.eq(0);
   });
 
 
