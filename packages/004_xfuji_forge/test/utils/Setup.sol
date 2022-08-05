@@ -96,8 +96,7 @@ contract Setup is DSTestPlus {
     vault = new Vault(
       reg.asset,
       reg.debtAsset,
-      reg.oracle,
-      address(router)
+      reg.oracle
     );
 
     // Configs

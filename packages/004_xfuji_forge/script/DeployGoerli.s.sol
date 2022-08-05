@@ -46,8 +46,7 @@ contract DeployGoerli is ScriptPlus {
     vault = new Vault(
       asset,
       debtAsset,
-      oracle,
-      address(router)
+      oracle
     );
     saveAddress("./deployments/goerli/Vault", address(vault));
 

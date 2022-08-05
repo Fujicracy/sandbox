@@ -4,10 +4,7 @@
 
 AAVE_V3=$(cat ./deployments/goerli/AaveV3Goerli)
 
-# TODO remove router from constructor-args
-ROUTER=$(cat ./deployments/goerli/XRouter)
-
-deploy_contract Vault --constructor-args $ASSET $DEBT_ASSET $ORACLE $ROUTER
+deploy_contract Vault --constructor-args $ASSET $DEBT_ASSET $ORACLE
 
 VAULT=$(cat ./deployments/goerli/Vault)
 

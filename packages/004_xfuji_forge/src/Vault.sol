@@ -5,7 +5,6 @@ import "openzeppelin-contracts/contracts/token/ERC20/extensions/ERC4626.sol";
 import "openzeppelin-contracts/contracts/utils/Address.sol";
 import "./interfaces/ILendingProvider.sol";
 import "./interfaces/IFujiOracle.sol";
-import "./interfaces/IRouter.sol";
 
 contract Vault is ERC4626 {
   using Math for uint256;
@@ -30,7 +29,6 @@ contract Vault is ERC4626 {
   ILendingProvider public activeProvider;
 
   IFujiOracle public oracle;
-  IRouter public router;
 
   Factor public maxLtv = Factor(75, 100);
 
@@ -39,8 +37,7 @@ contract Vault is ERC4626 {
   constructor(
     address asset_,
     address debtAsset_,
-    address oracle_,
-    address router_
+    address oracle_
   )
     ERC4626(IERC20Metadata(asset_))
     ERC20(
@@ -52,8 +49,6 @@ contract Vault is ERC4626 {
   {
     _debtAsset = IERC20Metadata(debtAsset_);
     oracle = IFujiOracle(oracle_);
-
-    router = IRouter(router_);
   }
 
   ///////////////////////////////////////////////

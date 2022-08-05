@@ -46,8 +46,7 @@ contract DeployRinkeby is ScriptPlus {
     vault = new Vault(
       asset,
       debtAsset,
-      oracle,
-      address(router)
+      oracle
     );
     saveAddress("./deployments/rinkeby/Vault", address(vault));
 
