@@ -14,5 +14,11 @@ This experiment showcases how the permit() function is used in the context of ER
 
 #### Notes
 
+- The following [article](https://medium.com/metamask/eip712-is-coming-what-to-expect-and-how-to-use-it-bb92fd1a7a26) is a bit old, but a good primer on some of the concepts needed to understand EIP712 in general and this experiment.
 - To see the implementation of how to build permit's 'digest' from within solidity refer to getPermitDigest() in PermitProcessor.sol contract.
 - To see how the front-end could handle the permit 'digest' for signing refer to **Tests No. 2**, and **Test No. 3** in `./test/permit_test.js`.
+
+#### Additional Resources
+- Metamask procedure to do signTypedData: [here](https://docs.metamask.io/guide/signing-data.html#sign-typed-data-v4)
+- Etherjs procedure to do signTypedData from a Signer object: [here](https://docs.ethers.io/v5/api/signer/#Signer-signTypedData)
+- Relevant issues regarding Ethersjs EIP712 implementation: [here](https://github.com/ethers-io/ethers.js/issues/687)
