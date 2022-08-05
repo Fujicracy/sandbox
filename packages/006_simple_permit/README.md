@@ -14,5 +14,5 @@ This experiment showcases how the permit() function is used in the context of ER
 
 #### Notes
 
-- To see the implementation of how to build permit's 'digest' refer to getPermitDigest() in PermitProcessor.sol contract.
-- To see how the front-end will handle the permit 'digest' for signing refer to Tests No. 2, and Test No. 3 in `./test/permit_test.js`.
+- To see the implementation of how to build permit's 'digest' from within solidity refer to getPermitDigest() in PermitProcessor.sol contract.
+- To see how the front-end could handle the permit 'digest' for signing refer to **Tests No. 2**, and **Test No. 3** in `./test/permit_test.js`.

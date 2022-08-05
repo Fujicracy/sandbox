@@ -7,7 +7,9 @@ const { expect } = require("chai");
 
 if (!process.env.PRIVATE_KEY_HARDHAT_TEST_SIGNER) {
   throw "Please set PRIVATE_KEY_HARDHAT_TEST_SIGNER in .env";
-} 
+}
+
+const DEBUG = false;
 
 describe("Tests for TransferFrom with Permit", function () {
   // We define a fixture to reuse the same setup in every test.
@@ -73,15 +75,61 @@ describe("Tests for TransferFrom with Permit", function () {
     // Using Etherjs _signTypedData method of ethers.Signer class
     // The goal is to obtain the v,r,s values.
     // This method is in similarity on how browser wallets will process signature.
-    const messageDigest = await processor.getPermitDigest(
-      owner.address,
-      processor.address,
-      ownerBalance,
-      deadline
+    const domain = {
+      // Dapp-defined parameter: in this test it is set-up in {MockToken.sol}
+      name: await token.name(),
+      // Dapp-defined parameter: in this test it is set-up in {MockToken.sol}
+      version: '1',
+      // obtained from evm opcode CHAINID for each EVM. Refer to https://chainlist.org/ and/or https://eips.ethereum.org/EIPS/eip-155
+      chainId: (await ethers.provider.getNetwork()).chainId,
+      // contract for which this 'domain' object belongs.
+      verifyingContract: token.address
+    };
+    const types = {
+      // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)")
+      Permit: [
+        { name: 'owner', type: 'address' },
+        { name: 'spender', type: 'address' },
+        { name: 'value', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+        { name: 'deadline', type: 'uint256' },
+      ]
+    }
+    const value = {
+      owner: owner.address,
+      spender: processor.address,
+      value: ownerBalance.toString(),
+      nonce: (await token.nonces(owner.address)).toString(),
+      deadline: deadline
+    }
+
+    const messageDigest_signTypedData = await owner._signTypedData(
+      domain,
+      types,
+      value
     );
-    const ownerSigningKey = new ethers.utils.SigningKey(process.env.PRIVATE_KEY_HARDHAT_TEST_SIGNER);
-    const ownerSignedDigest = await ownerSigningKey.signDigest(messageDigest);
-    const { v, r, s } = ethers.utils.splitSignature(ownerSignedDigest);
+    const { v, r, s, } = ethers.utils.splitSignature(messageDigest_signTypedData);
+
+    if (DEBUG) {
+      console.log('\nThe v,r,s values should match for both signature objects:\n')
+      console.log('_signTypedData()',
+        { v, r, s, raw: messageDigest_signTypedData }, '\n');
+      const messageDigest = await processor.getPermitDigest(
+        owner.address,
+        processor.address,
+        ownerBalance,
+        deadline
+      );
+      const ownerSigningKey = new ethers.utils.SigningKey(process.env.PRIVATE_KEY_HARDHAT_TEST_SIGNER);
+      const ownerSignedDigest = await ownerSigningKey.signDigest(messageDigest);
+      console.log('SigningKey.signDigest()',
+        {
+          v: ownerSignedDigest.v,
+          r: ownerSignedDigest.r,
+          s: ownerSignedDigest.s,
+          raw: ownerSignedDigest.compact
+        }, '\n');
+    }
 
     const connectedProcessor = processor.connect(otherAccount);
     await connectedProcessor.transferFromWithPermit(
