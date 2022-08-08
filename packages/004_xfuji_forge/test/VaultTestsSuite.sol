@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {Setup} from "./utils/Setup.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {IVault} from "../src/interfaces/IVault.sol";
-import {ERC20} from "../src/Vault.sol";
 
 interface IMintable {
   function mint(address, uint256) external;

@@ -67,4 +67,6 @@ interface IVault is IERC4626 {
   function payback(uint256 debt, address receiver) external returns (uint256);
 
   function setActiveProvider(ILendingProvider activeProvider) external;
+
+  function activeProvider() external returns (ILendingProvider);
 }

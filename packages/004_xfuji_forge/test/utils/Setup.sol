@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 import {IConnextHandler} from "nxtp/core/connext/interfaces/IConnextHandler.sol";
-import {Vault} from "../../src/Vault.sol";
+import {BorrowingVault} from "../../src/vaults/borrowing/BorrowingVault.sol";
 import {XRouter} from "../../src/XRouter.sol";
 import {IWETH9} from "../../src/helpers/PeripheryPayments.sol";
 import {AaveV3Goerli} from "../../src/providers/goerli/AaveV3Goerli.sol";
@@ -22,9 +22,6 @@ contract Setup is DSTestPlus {
     address connextHandler;
   }
 
-  Vault.Factor maxLtv = Vault.Factor(75, 100);
-  Vault.Factor liqRatio = Vault.Factor(5, 100);
-
   // Domains
   // goerli -> 3331
   // rinkeby -> 1111
@@ -34,7 +31,7 @@ contract Setup is DSTestPlus {
 
   mapping(uint256 => Registry) public registry;
 
-  Vault public vault;
+  IVault public vault;
   XRouter public router;
   ILendingProvider public aaveV3;
 
@@ -93,15 +90,16 @@ contract Setup is DSTestPlus {
       IWETH9(reg.weth),
       IConnextHandler(reg.connextHandler)
     );
-    vault = new Vault(
+    vault = new BorrowingVault(
       reg.asset,
       reg.debtAsset,
-      reg.oracle
+      reg.oracle,
+      address(0)
     );
 
     // Configs
     vault.setActiveProvider(aaveV3);
-    router.registerVault(IVault(address(vault)));
+    router.registerVault(vault);
     router.setTestnetToken(reg.testToken);
     router.setRouter(domain == 3331 ? 1111 : 3331, address(0xAbc1));
   }
