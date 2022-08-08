@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./interfaces/IVaultFactory.sol";
+import {IVaultFactory} from "./interfaces/IVaultFactory.sol";
 
 /// @dev Custom Errors
 error ZeroAddress();
@@ -18,9 +18,6 @@ contract Chief is Ownable {
 
   mapping(address => bool) public vaults;
   mapping(address => bool) public allowedFactories;
-
-  constructor() {
-  }
 
   function deployVault(address _factory, bytes calldata _deployData) external returns (address vault) {
     if (!allowedFactories[_factory]) revert NotAllowed();

@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity >=0.8.0;
 
-import "./BorrowingVault.sol";
-import "../../abstracts/VaultDeployer.sol";
+import {BorrowingVault} from "./BorrowingVault.sol";
+import {VaultDeployer} from "../../abstracts/VaultDeployer.sol";
 
-/// @notice Contract for deploying Trident exchange Hybrid Vault with configurations.
-/// @author Mudit Gupta.
 contract BorrowingVaultFactory is VaultDeployer {
   constructor(address _chief) VaultDeployer(_chief) {}
 
