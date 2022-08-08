@@ -17,7 +17,7 @@ import {IVault} from "../interfaces/IVault.sol";
 import {ILendingProvider} from "../interfaces/ILendingProvider.sol";
 import {IFujiOracle} from  "../interfaces/IFujiOracle.sol";
 
-abstract contract VaultBase is ERC20, IVault {
+abstract contract BaseVault is ERC20, IVault {
   using Math for uint256;
   using Address for address;
   using SafeERC20 for IERC20;

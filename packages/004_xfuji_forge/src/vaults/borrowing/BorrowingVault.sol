@@ -5,9 +5,9 @@ import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
-import {VaultBase} from "../../abstracts/VaultBase.sol";
+import {BaseVault} from "../../abstracts/BaseVault.sol";
 
-contract BorrowingVault is VaultBase {
+contract BorrowingVault is BaseVault {
   using Math for uint256;
   using SafeERC20 for IERC20;
 
@@ -17,7 +17,7 @@ contract BorrowingVault is VaultBase {
     address oracle_,
     address chief_
   )
-    VaultBase(asset_, debtAsset_, oracle_, chief_)
+    BaseVault(asset_, debtAsset_, oracle_, chief_)
   { }
 
   /////////////////////////////////
