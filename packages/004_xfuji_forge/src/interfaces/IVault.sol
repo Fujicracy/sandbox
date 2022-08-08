@@ -7,8 +7,8 @@ pragma solidity ^0.8.9;
  * @notice Defines the interface for vault operations extending from IERC4326.
  */
 
-import "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
-import "./ILendingProvider.sol";
+import {IERC4626} from "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
+import {ILendingProvider} from "./ILendingProvider.sol";
 
 interface IVault is IERC4626 {
 
@@ -17,9 +17,19 @@ interface IVault is IERC4626 {
     uint64 denum;
   }
 
-  event Borrow(address indexed caller, address indexed owner, uint256 debt, uint256 shares);
+  event Borrow(
+    address indexed caller,
+    address indexed owner,
+    uint256 debt,
+    uint256 shares
+  );
 
-  event Payback(address indexed caller, address indexed owner, uint256 debt, uint256 shares);
+  event Payback(
+    address indexed caller,
+    address indexed owner,
+    uint256 debt,
+    uint256 shares
+  );
 
   function debtDecimals() external view returns (uint8);
 

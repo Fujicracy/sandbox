@@ -47,10 +47,10 @@ abstract contract VaultBase is ERC20, IVault {
     address chief_
   )
     ERC20(
-      // ex: Fuji-X Dai Stablecoin Vault Shares
-      string(abi.encodePacked("Fuji-X ", IERC20Metadata(asset_).name(), " Vault Shares")),
-      // ex: fxDAI
-      string(abi.encodePacked("fx", IERC20Metadata(asset_).symbol()))
+      // ex: X-Fuji Dai Stablecoin Vault Shares
+      string(abi.encodePacked("X-Fuji ", IERC20Metadata(asset_).name(), " Vault Shares")),
+      // ex: xfDAI
+      string(abi.encodePacked("xf", IERC20Metadata(asset_).symbol()))
     )
   {
     _asset = IERC20Metadata(asset_);
@@ -59,9 +59,9 @@ abstract contract VaultBase is ERC20, IVault {
     chief = chief_;
   }
 
-  ///////////////////////////////////////////////
+  ////////////////////////////////////////////
   /// Asset management: overrides IERC4626 ///
-  ///////////////////////////////////////////////
+  ////////////////////////////////////////////
 
   /** @dev See {IERC4626-asset}. */
   function asset() public view virtual override returns (address) {
