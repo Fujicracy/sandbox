@@ -24,6 +24,19 @@ const connextData = {
     TestToken: {
       address: "0x26FE8a8f86511d678d031a022E48FfF41c6a3e3b"
     }
+  },
+  maticmum: {
+    chainId: 8001,
+    domainId: 9991,
+    ConnextHandler: {
+      address: "0x765cbd312ad84A791908000DF58d879e4eaf768b",
+    },
+    PromiseRouter: {
+      address: "0xFe391d6ca29085075C2483efB3E0Ba125cd6EE1e",
+    },
+    TestToken: {
+      address: "0x21c5a4dAeAf9625c781Aa996E9229eA95EE4Ff77"
+    }
   }
 }
 
@@ -47,6 +60,17 @@ const aaveV3Data = {
       usdc: "0xA2025B15a1757311bfD68cb14eaeFCc237AF5b43",
       ausdc: "0x1Ee669290939f8a8864497Af3BC83728715265FF"
     }
+  },
+  maticmum: {
+    pool: "0x6C9fB0D5bD9429eb9Cd96B85B81d872281771E6B",
+    dataProvider: "0x8f57153F18b7273f9A814b93b31Cb3f9b035e7C2",
+    assets: {
+      weth: "0xd575d4047f8c667E064a4ad433D04E25187F40BB",
+      aweth: "0x685bF4eab23993E94b4CFb9383599c926B66cF57",
+      usdc: "0x9aa7fEc87CA69695Dd1f879567CcF49F3ba417E2",
+      ausdc: "0xCdc2854e97798AfDC74BC420BD5060e022D14607"
+    }
+
   }
 }
 
@@ -57,6 +81,10 @@ const mockOracleData = {
     usdc: "0x47bbaC2eaE84D2b82123BB483E307C614a5eAC4e",
   },
   goerli: {
+    weth: "0xF188a4504E0D3a5446eb99340d709C148f2768f7",
+    usdc: "0x47bbaC2eaE84D2b82123BB483E307C614a5eAC4e"
+  },
+  maticmum: {
     weth: "0xF188a4504E0D3a5446eb99340d709C148f2768f7",
     usdc: "0x47bbaC2eaE84D2b82123BB483E307C614a5eAC4e"
   }
@@ -71,6 +99,7 @@ const xFujiDeployments = {
     mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
     router: "0xDEFEcE76c9eBf2A4F7CCabAe617efA90E49F2FAC",
     pingMe: "0xd41D09D455E9BD2cFa7FD42c235b933EF7604dD9",
+    pingMeInitiator: "0xB751B77eb70045830B61Eb57309BD9fC9270dd55"
   },
   goerli: {
     unwrapper: "0xBB73511B0099eF355AA580D0149AC4C679A0B805",
@@ -80,7 +109,18 @@ const xFujiDeployments = {
     mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
     router: "0xEB84d8DBedF3482e029494eD76446BcD072bbaFF",
     pingMe: "0xd41D09D455E9BD2cFa7FD42c235b933EF7604dD9",
+    pingMeInitiator: "0xB751B77eb70045830B61Eb57309BD9fC9270dd55"
   },
+  maticmum: {
+    unwrapper: "0xBB73511B0099eF355AA580D0149AC4C679A0B805",
+    aaveV3: "0xc5d5a86E9f752e241eAc96a0595E4Cd6adc05F5a",
+    oracle: "0x459B490F86e6B7C86086511D6a378f8C4b313D17",
+    vault: "",
+    mapper: "0x2a6CE9bb134547dce7dF563cefD17885264F6B41",
+    router: "",
+    pingMe: "0xd41D09D455E9BD2cFa7FD42c235b933EF7604dD9",
+    pingMeInitiator: "0xB751B77eb70045830B61Eb57309BD9fC9270dd55"
+  }
 }
 
 module.exports = {
