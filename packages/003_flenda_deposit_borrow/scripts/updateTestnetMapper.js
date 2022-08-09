@@ -9,7 +9,7 @@ if (!process.env.NETWORK) {
 }
 
 const CHAIN_NAME = process.env.NETWORK;
-const TARGET_CHAIN_NAME = 'goerli';
+const TARGET_CHAIN_NAME = 'rinkeby';
 
 if (CHAIN_NAME == TARGET_CHAIN_NAME) {
   throw "NETWORK in ./packages/hardhat/.env and TARGET_CHAIN_NAME cannot be the same";
