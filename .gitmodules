@@ -16,3 +16,9 @@
 [submodule "packages/004_xfuji_forge/lib/nxtp"]
 	path = packages/004_xfuji_forge/lib/nxtp
 	url = https://github.com/connext/nxtp
+[submodule "packages/005_xfuji_cross_borrow/lib/forge-std"]
+	path = packages/005_xfuji_cross_borrow/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "packages/005_xfuji_cross_borrow/lib/openzeppelin-contracts"]
+	path = packages/005_xfuji_cross_borrow/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
