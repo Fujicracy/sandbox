@@ -14,7 +14,7 @@ if (!process.env.INFURA_ID) {
 const ORIGIN_CHAIN = process.env.NETWORK;
 /// Test Parameters ///
 const DEST_CHAIN = 'goerli'; // Set up the destination chain
-const UNIQUE_MESSAGE = 'Hello World!' // Set up any message that would be emitted as an event on destination chain.
+const UNIQUE_MESSAGE = 'Hello World Yome!' // Set up any message that would be emitted as an event on destination chain.
 
 if (ORIGIN_CHAIN == DEST_CHAIN) {
   throw "NETWORK in ./packages/hardhat/.env and DEST_CHAIN cannot be the same";
