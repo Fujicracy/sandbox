@@ -54,7 +54,7 @@ const main = async () => {
     DEPOSIT_AMOUNT,
     BORROW_AMOUNT,
     testSigner.address,
-    connextData[DEST_CHAIN].domainId
+    connextData[ORIGIN_CHAIN].domainId // Chain to send the borrowed assets.
   );
 
   let handler = await ethers.getContractAt("IConnext", connextData[ORIGIN_CHAIN].ConnextHandler.address);

@@ -1,0 +1,2 @@
+clear
+await ethers.provider.getNetwork()

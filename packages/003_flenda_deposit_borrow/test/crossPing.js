@@ -13,7 +13,8 @@ if (!process.env.INFURA_ID) {
 
 const ORIGIN_CHAIN = process.env.NETWORK;
 /// Test Parameters ///
-const DEST_CHAIN = 'rinkeby'; // Set up the destination chain
+const DEST_CHAIN = 'goerli'; // Set up the destination chain
+const UNIQUE_MESSAGE = 'Hello World Yome!' // Set up any message that would be emitted as an event on destination chain.
 
 if (ORIGIN_CHAIN == DEST_CHAIN) {
   throw "NETWORK in ./packages/hardhat/.env and DEST_CHAIN cannot be the same";
@@ -31,10 +32,10 @@ const checkUserEthBal = async () => {
 const main = async () => {
   checkUserEthBal();
 
-  console.log("...building XCall parameters");
+  console.log("...building XCall parameters\n");
   const pinger = await ethers.getContractAt("PingMe", xFujiDeployments[DEST_CHAIN].pingMe);
   const utx = await pinger.populateTransaction.justPing(
-    "Hello world!"
+    UNIQUE_MESSAGE
   );
 
   let handler = await ethers.getContractAt("IConnext", connextData[ORIGIN_CHAIN].ConnextHandler.address);
@@ -63,12 +64,22 @@ const main = async () => {
     amount: 0
   };
 
-  console.log("...sending Xcall");
+  const destProvider = new ethers.providers.JsonRpcProvider(`https://${DEST_CHAIN}.infura.io/v3/${process.env.INFURA_ID}`);
+  let destSigner = new ethers.Wallet(process.env.PRIVATE_KEY);
+  destSigner = destSigner.connect(destProvider);
+  const pingContractAtDestination = await ethers.getContractAt("PingMe", callContract);
+
+  const numberOfPings = await pingContractAtDestination.totalPings();
+
+  console.log(`Current Number of pings at destination chain: ${numberOfPings}\n`);
+  console.log(`Refer to contract at destination chain at address: ${callContract}\n`);
+
+  console.log("...sending PingMe Xcall");
   const xcallTxReceipt = await handler.xcall(xCallArgs /*,{gasLimit: ethers.BigNumber.from("30000000")}*/);
   await xcallTxReceipt.wait();
   console.log(xcallTxReceipt); // so we can see the transaction hash
-  console.log("Xcall Test complete!");
-  console.log("Read this experiment README.md file at root of this package.");
+  console.log("Xcall Cross-Ping call complete!");
+  console.log("Read this experiment README.md file at root of this package.\n\n");
 }
 
 main().catch((error) => {
