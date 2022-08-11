@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.15;
 
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -43,6 +43,7 @@ contract VaultPermissions is EIP712 {
 
     /**
      * @dev Based on {IERC20-allowance} for assets.
+     * Should be used to override {IERC4626-allowance}.
      */
     function assetAllowance(address owner, address spender)
         public
@@ -262,6 +263,40 @@ contract VaultPermissions is EIP712 {
         require(spender != address(0), "Zero address");
         _debtAllowance[owner][spender] = amount;
         emit DebtApproval(owner, spender, amount);
+    }
+
+    /**
+     * @dev Based on OZ {ERC20-spendAllowance} for assets.
+     */
+    function _spendAssetAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal {
+        uint256 currentAllowance = assetAllowance(owner, spender);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Insufficient assetAllowance");
+            unchecked {
+                _setAssetAllowance(owner, spender, currentAllowance - amount);
+            }
+        }
+    }
+
+    /**
+     * @dev Based on OZ {ERC20-spendAllowance} for assets.
+     */
+    function _spendDebtAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal {
+        uint256 currentAllowance = debtAllowance(owner, spender);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Insufficient debtAllowance");
+            unchecked {
+                _setDebtAllowance(owner, spender, currentAllowance - amount);
+            }
+        }
     }
 
     /**
