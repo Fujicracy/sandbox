@@ -1,0 +1,2 @@
+@xfuji/=lib/x-fuji/packages/protocol/src/
+@openzeppelin/=lib/openzeppelin-contracts/
