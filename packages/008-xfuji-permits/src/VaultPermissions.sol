@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.15;
 
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -43,6 +43,7 @@ contract VaultPermissions is EIP712 {
 
     /**
      * @dev Based on {IERC20-allowance} for assets.
+     * Should be used to override {IERC4626-allowance}.
      */
     function assetAllowance(address owner, address spender)
         public
@@ -58,6 +59,7 @@ contract VaultPermissions is EIP712 {
     function debtAllowance(address owner, address spender)
         public
         view
+        virtual
         returns (uint256)
     {
         return _debtAllowance[owner][spender];
@@ -107,6 +109,7 @@ contract VaultPermissions is EIP712 {
      */
     function increaseDebtAllowance(address spender, uint256 byAmount)
         public
+        virtual
         returns (bool)
     {
         address owner = msg.sender;
@@ -123,6 +126,7 @@ contract VaultPermissions is EIP712 {
      */
     function decreaseDebtAllowance(address spender, uint256 byAmount)
         public
+        virtual
         returns (bool)
     {
         address owner = msg.sender;
@@ -200,7 +204,7 @@ contract VaultPermissions is EIP712 {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public {
+    ) public virtual {
         require(block.timestamp <= deadline, "Expired deadline");
 
         bytes32 structHash = keccak256(
@@ -265,13 +269,44 @@ contract VaultPermissions is EIP712 {
     }
 
     /**
+     * @dev Based on OZ {ERC20-spendAllowance} for assets.
+     */
+    function _spendAssetAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal {
+        uint256 currentAllowance = assetAllowance(owner, spender);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Insufficient assetAllowance");
+            unchecked {
+                _setAssetAllowance(owner, spender, currentAllowance - amount);
+            }
+        }
+    }
+
+    /**
+     * @dev Based on OZ {ERC20-spendAllowance} for assets.
+     */
+    function _spendDebtAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
+        uint256 currentAllowance = debtAllowance(owner, spender);
+        if (currentAllowance != type(uint256).max) {
+            require(currentAllowance >= amount, "Insufficient debtAllowance");
+            unchecked {
+                _setDebtAllowance(owner, spender, currentAllowance - amount);
+            }
+        }
+    }
+
+    /**
      * @dev "Consume a nonce": return the current value and increment.
      * _Available since v4.1._
      */
-    function _useNonce(address owner)
-        internal
-        returns (uint256 current)
-    {
+    function _useNonce(address owner) internal returns (uint256 current) {
         Counters.Counter storage nonce = _nonces[owner];
         current = nonce.current();
         nonce.increment();
