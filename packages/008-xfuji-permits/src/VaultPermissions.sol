@@ -59,6 +59,7 @@ contract VaultPermissions is EIP712 {
     function debtAllowance(address owner, address spender)
         public
         view
+        virtual
         returns (uint256)
     {
         return _debtAllowance[owner][spender];
@@ -108,6 +109,7 @@ contract VaultPermissions is EIP712 {
      */
     function increaseDebtAllowance(address spender, uint256 byAmount)
         public
+        virtual
         returns (bool)
     {
         address owner = msg.sender;
@@ -124,6 +126,7 @@ contract VaultPermissions is EIP712 {
      */
     function decreaseDebtAllowance(address spender, uint256 byAmount)
         public
+        virtual
         returns (bool)
     {
         address owner = msg.sender;
@@ -201,7 +204,7 @@ contract VaultPermissions is EIP712 {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public {
+    ) public virtual {
         require(block.timestamp <= deadline, "Expired deadline");
 
         bytes32 structHash = keccak256(
@@ -289,7 +292,7 @@ contract VaultPermissions is EIP712 {
         address owner,
         address spender,
         uint256 amount
-    ) internal {
+    ) internal virtual {
         uint256 currentAllowance = debtAllowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "Insufficient debtAllowance");
@@ -303,10 +306,7 @@ contract VaultPermissions is EIP712 {
      * @dev "Consume a nonce": return the current value and increment.
      * _Available since v4.1._
      */
-    function _useNonce(address owner)
-        internal
-        returns (uint256 current)
-    {
+    function _useNonce(address owner) internal returns (uint256 current) {
         Counters.Counter storage nonce = _nonces[owner];
         current = nonce.current();
         nonce.increment();

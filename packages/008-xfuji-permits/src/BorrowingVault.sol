@@ -2,6 +2,7 @@
 pragma solidity 0.8.15;
 
 import {BaseVault} from "./BaseVault.sol";
+import {VaultPermissions} from "./VaultPermissions.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -17,8 +18,16 @@ contract BorrowingVault is BaseVault {
         address oracle_,
         address chief_
     )
-        BaseVault(asset_, debtAsset_, oracle_, chief_)
-        VaultPermissions(
+        BaseVault(
+            // asset_
+            asset_,
+            // debtAsset_
+            debtAsset_,
+            //oracle
+            oracle_,
+            //chief
+            chief_,
+            // name_
             string(
                 abi.encodePacked(
                     "X-Fuji ",
@@ -26,7 +35,8 @@ contract BorrowingVault is BaseVault {
                     " Vault Shares"
                 )
             ),
-            "1"
+            // symbol_
+            string(abi.encodePacked("xf", IERC20Metadata(asset_).symbol()))
         )
     {}
 
@@ -142,7 +152,7 @@ contract BorrowingVault is BaseVault {
         override
         returns (uint256)
     {
-        VaultPermissions.debtAllowance(owner, spender);
+        return VaultPermissions.debtAllowance(owner, spender);
     }
 
     /**
@@ -154,7 +164,7 @@ contract BorrowingVault is BaseVault {
         override
         returns (bool)
     {
-        VaultPermissions.increaseDebtAllowance(spender, byAmount);
+        return VaultPermissions.increaseDebtAllowance(spender, byAmount);
     }
 
     /**
@@ -166,7 +176,7 @@ contract BorrowingVault is BaseVault {
         override
         returns (bool)
     {
-        VaultPermissions.decreaseDebtAllowance(spender, byAmount);
+        return VaultPermissions.decreaseDebtAllowance(spender, byAmount);
     }
 
     /**
