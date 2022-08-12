@@ -22,8 +22,6 @@ abstract contract BaseVault is ERC20, VaultPermissions, IVault {
     using Address for address;
     using SafeERC20 for IERC20;
 
-    address public immutable chief;
-
     IERC20Metadata internal immutable _asset;
     IERC20Metadata internal immutable _debtAsset;
 
@@ -44,14 +42,12 @@ abstract contract BaseVault is ERC20, VaultPermissions, IVault {
         address asset_,
         address debtAsset_,
         address oracle_,
-        address chief_,
         string memory name_,
         string memory symbol_
     ) ERC20(name_, symbol_) VaultPermissions(name_, "1") {
         _asset = IERC20Metadata(asset_);
         _debtAsset = IERC20Metadata(debtAsset_);
         oracle = IFujiOracle(oracle_);
-        chief = chief_;
     }
 
     ////////////////////////////////////////////////////

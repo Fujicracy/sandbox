@@ -15,8 +15,7 @@ contract BorrowingVault is BaseVault {
     constructor(
         address asset_,
         address debtAsset_,
-        address oracle_,
-        address chief_
+        address oracle_
     )
         BaseVault(
             // asset_
@@ -25,8 +24,6 @@ contract BorrowingVault is BaseVault {
             debtAsset_,
             //oracle
             oracle_,
-            //chief
-            chief_,
             // name_
             string(
                 abi.encodePacked(
