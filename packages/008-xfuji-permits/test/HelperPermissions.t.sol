@@ -42,16 +42,19 @@ contract HelperPermissions is Test {
 
     function _setAddresses(Chains _testchain) internal {
         if (_testchain == Chains.goerli) {
+            vm.createSelectFork("goerli");
             weth = WETH_GOERLI;
             usdc = USDC_GOERLI;
             AaveV3Goerli agoerli = new AaveV3Goerli();
             aaveV3 = ILendingProvider(address(agoerli));
         } else if (_testchain == Chains.rinkeby) {
+            vm.createSelectFork("rinkeby");
             weth = WETH_RINKEBY;
             usdc = USDC_RINKEBY;
             AaveV3Rinkeby arinkeby = new AaveV3Rinkeby();
             aaveV3 = ILendingProvider(address(arinkeby));
         } else if (_testchain == Chains.mumbai) {
+            vm.createSelectFork("mumbai");
             weth =  WETH_MUMBAI;
             usdc = USDC_MUMBAI;
             AaveV3Mumbai amumbai = new AaveV3Mumbai();
