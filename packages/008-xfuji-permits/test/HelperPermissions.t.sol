@@ -12,11 +12,10 @@ import {AaveV3Rinkeby} from "@xfuji/providers/rinkeby/AaveV3Rinkeby.sol";
 import {AaveV3Mumbai} from "../src/providers/mumbai/AaveV3Mumbai.sol";
 
 contract HelperPermissions is Test {
-
     enum Chains {
-      goerli,
-      rinkeby,
-      mumbai
+        goerli,
+        rinkeby,
+        mumbai
     }
 
     address public constant WETH_RINKEBY =
@@ -55,7 +54,7 @@ contract HelperPermissions is Test {
             aaveV3 = ILendingProvider(address(arinkeby));
         } else if (_testchain == Chains.mumbai) {
             vm.createSelectFork("mumbai");
-            weth =  WETH_MUMBAI;
+            weth = WETH_MUMBAI;
             usdc = USDC_MUMBAI;
             AaveV3Mumbai amumbai = new AaveV3Mumbai();
             aaveV3 = ILendingProvider(address(amumbai));
@@ -91,5 +90,70 @@ contract HelperPermissions is Test {
                 answeredInRound
             )
         );
+    }
+}
+
+contract SigUtilsHelper {
+
+    // solhint-disable-next-line var-name-mixedcase
+    bytes32 private constant _PERMIT_ASSET_TYPEHASH =
+        keccak256(
+            "PermitAssets(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+        );
+    // solhint-disable-next-line var-name-mixedcase
+    bytes32 private constant _PERMIT_DEBT_TYPEHASH =
+        keccak256(
+            "PermitDebt(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+        );
+
+    struct Permit {
+        address owner;
+        address spender;
+        uint256 value;
+        uint256 nonce;
+        uint256 deadline;
+    }
+
+    // computes the hash of a permit-asset
+    function getStructHashAsset(Permit memory _permit)
+        public
+        pure
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    _PERMIT_ASSET_TYPEHASH,
+                    _permit.owner,
+                    _permit.spender,
+                    _permit.value,
+                    _permit.nonce,
+                    _permit.deadline
+                )
+            );
+    }
+
+    // computes the hash of a permit-debt
+    function getStructHashDebt(Permit memory _permit)
+        public
+        pure
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    _PERMIT_DEBT_TYPEHASH,
+                    _permit.owner,
+                    _permit.spender,
+                    _permit.value,
+                    _permit.nonce,
+                    _permit.deadline
+                )
+            );
+    }
+
+    // computes the digest
+    function gethashTypedDataV4Digest(bytes32 domainSeperator_, bytes32 structHash_) external pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19\x01", domainSeperator_, structHash_));
     }
 }

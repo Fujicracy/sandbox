@@ -8,6 +8,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
+import "forge-std/console.sol";
+
 contract BorrowingVault is BaseVault {
     using Math for uint256;
     using SafeERC20 for IERC20;
@@ -223,6 +225,7 @@ contract BorrowingVault is BaseVault {
 
         // no debt
         if (debtShares == 0) {
+            console.log('debtshareszero');
             freeAssets = convertToAssets(balanceOf(owner));
         } else {
             uint256 debt = convertToDebt(debtShares);

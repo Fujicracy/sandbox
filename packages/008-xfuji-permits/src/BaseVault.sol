@@ -17,6 +17,8 @@ import {ILendingProvider} from "@xfuji/interfaces/ILendingProvider.sol";
 import {IFujiOracle} from "@xfuji/interfaces/IFujiOracle.sol";
 import {VaultPermissions} from "./VaultPermissions.sol";
 
+import "forge-std/console.sol";
+
 abstract contract BaseVault is ERC20, VaultPermissions, IVault {
     using Math for uint256;
     using Address for address;
@@ -298,6 +300,7 @@ abstract contract BaseVault is ERC20, VaultPermissions, IVault {
         address owner
     ) public override returns (uint256) {
         require(assets > 0, "Wrong input");
+        console.log('maxWithdraw',maxWithdraw(owner));
         require(assets <= maxWithdraw(owner), "Withdraw more than max");
 
         address caller = _msgSender();
