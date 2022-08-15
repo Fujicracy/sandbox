@@ -35,6 +35,7 @@ contract HelperPermissions is Test {
     address public weth;
     address public usdc;
     address public wethPriceFeed = vm.addr(100);
+    
     address public usdcPriceFeed = vm.addr(101);
 
     ILendingProvider public aaveV3;
@@ -80,7 +81,7 @@ contract HelperPermissions is Test {
         );
         int256 answerUsdc = 1 * 1e8;
         vm.mockCall(
-            wethPriceFeed,
+            usdcPriceFeed,
             abi.encodeWithSelector(IAggregatorV3.latestRoundData.selector),
             abi.encode(
                 roundId,

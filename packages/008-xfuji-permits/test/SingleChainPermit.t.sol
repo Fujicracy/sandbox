@@ -113,9 +113,9 @@ contract SingleChainPermitTests is Test, HelperPermissions {
         );
         assertEq(bvault.debtAllowance(owner, operator), borrowDelegated);
         _startMockPriceFeedCalls();
-        // vm.prank(operator);
-        // bvault.borrow(borrowDelegated, operator, owner);
-        // assertEq(IERC20(usdc).balanceOf(operator), borrowDelegated);
+        vm.prank(operator);
+        bvault.borrow(borrowDelegated, operator, owner);
+        assertEq(IERC20(usdc).balanceOf(operator), borrowDelegated);
     }
 
     function _doDeposit() internal {
