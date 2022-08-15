@@ -24,3 +24,11 @@ a {
     background: black;
   }
 }
+
+code {
+  background: white;
+  padding: 0.25rem;
+  border: 1px solid lightgrey;
+  color: red;
+  border-radius: 3px;
+}
