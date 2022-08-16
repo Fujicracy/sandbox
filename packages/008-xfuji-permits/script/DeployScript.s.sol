@@ -36,7 +36,7 @@ contract DeployScript is Const, Script {
     OnchainPermitHelper public helper;
 
     function run() public {
-        vm.broadcast();
+        vm.startBroadcast();
         _setAddresses(deployChain);
         bvault = new BorrowingVault(
             weth,
