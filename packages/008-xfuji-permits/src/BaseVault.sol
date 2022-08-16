@@ -9,7 +9,6 @@ pragma solidity 0.8.15;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IVault} from "@xfuji/interfaces/IVault.sol";
@@ -22,7 +21,6 @@ import "forge-std/console.sol";
 abstract contract BaseVault is ERC20, VaultPermissions, IVault {
     using Math for uint256;
     using Address for address;
-    using SafeERC20 for IERC20;
 
     IERC20Metadata internal immutable _asset;
     IERC20Metadata internal immutable _debtAsset;
@@ -380,8 +378,7 @@ abstract contract BaseVault is ERC20, VaultPermissions, IVault {
         uint256 assets,
         uint256 shares
     ) internal {
-        SafeERC20.safeTransferFrom(
-            IERC20(asset()),
+        IERC20(asset()).transferFrom(
             caller,
             address(this),
             assets
@@ -404,7 +401,7 @@ abstract contract BaseVault is ERC20, VaultPermissions, IVault {
     ) internal {
         _burn(owner, shares);
         _executeProviderAction(asset(), assets, "withdraw");
-        SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
+        IERC20(asset()).transfer(receiver, assets);
 
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
@@ -667,14 +664,12 @@ abstract contract BaseVault is ERC20, VaultPermissions, IVault {
         // TODO needs input validation
         activeProvider = activeProvider_;
         // TODO needs to emit event.
-        SafeERC20.safeApprove(
-            IERC20(asset()),
+        IERC20(asset()).approve(
             activeProvider.approvedOperator(asset()),
             type(uint256).max
         );
         if (debtAsset() != address(0))
-            SafeERC20.safeApprove(
-                IERC20(debtAsset()),
+           IERC20(debtAsset()).approve(
                 activeProvider.approvedOperator(debtAsset()),
                 type(uint256).max
             );
