@@ -22,7 +22,7 @@ contract DeployScript is Const, Script {
         mumbai
     }
 
-    Chains public deployChain = Chains.rinkeby;
+    Chains public deployChain = Chains.mumbai;
 
     address public weth;
     address public usdc;

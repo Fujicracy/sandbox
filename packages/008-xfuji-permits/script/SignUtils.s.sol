@@ -13,6 +13,8 @@ contract SignUtils is Test {
   uint public pkey_;
 
   function run() public {
+    pkey_ = vm.envUint('PRIVATE_KEY_TEST');
+    digest_ = vm.envBytes32('LAST_DIGEST');
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(pkey_, digest_);
     console.log("v",v);
     console.log("r");console.logBytes32(r);

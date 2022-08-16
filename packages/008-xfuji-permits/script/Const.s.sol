@@ -2,8 +2,16 @@
 pragma solidity 0.8.15;
 
 contract Const {
+    //  Latest deployment addresses August-16-2022:
 
-  
+    address public constant BVAULT = 0x84cae60A4a1A058101E8Cab325E3745102811350;
+    address public constant SROUTER =
+        0x69A2c6d4dc6A5De2459b6E7D0e5deeD3da2C9cAf;
+    address public constant SIGHELPER =
+        0x09Cf11E589A10B097D00Af8767284983f01D918C;
+
+    // External constants and addresses:
+
     address public constant FUJI_ORACLE =
         0x459B490F86e6B7C86086511D6a378f8C4b313D17;
     address public constant AAVE_V3_PROVIDER =
@@ -40,8 +48,8 @@ contract Const {
         0x21c5a4dAeAf9625c781Aa996E9229eA95EE4Ff77;
 
     uint32[] public DOMAIN_IDS = [
-      DOMAIN_ID_RINKEBY,
-      DOMAIN_ID_GOERLI,
-      DOMAIN_ID_MUMBAI
+        DOMAIN_ID_RINKEBY,
+        DOMAIN_ID_GOERLI,
+        DOMAIN_ID_MUMBAI
     ];
 }
