@@ -77,8 +77,8 @@ contract DeployScript is Const, Script {
             usdc = USDC_MUMBAI;
             connextHandler = CONNEXT_HANDLER_MUMBAI;
             testToken = TEST_TOKEN_MUMBAI;
-            AaveV3Mumbai amumbai = new AaveV3Mumbai();
-            aaveV3 = ILendingProvider(address(amumbai));
+            // AaveV3Mumbai amumbai = new AaveV3Mumbai();
+            aaveV3 = ILendingProvider(0x88a32347133DDF7fa5ADf8a6040454efb26A0Ae6);
         }
     }
 
