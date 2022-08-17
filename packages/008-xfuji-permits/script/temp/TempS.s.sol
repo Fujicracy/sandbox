@@ -1,5 +1,0 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.15;
-contract TempS {
-bytes32 public constant S_VALUE = 0x0000000000000000000000000000000000000000000000000000000000000000;
-}

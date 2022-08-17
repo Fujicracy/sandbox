@@ -10,10 +10,6 @@ import {BorrowingVault} from "../src/BorrowingVault.sol";
 import {IERC20Mintable} from "@xfuji/interfaces/IERC20Mintable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// Temporary files
-import {TempR} from "./temp/TempR.s.sol";
-import {TempS} from "./temp/TempS.s.sol";
-
 contract SendXCall is TestParams, Const, Test {
     /**
     This test bridges collateral to a destination chain
@@ -48,40 +44,25 @@ contract SendXCall is TestParams, Const, Test {
         _assignVariables();
 
         uint256 deadline = _st2uint256(vm.readFile("script/temp/deadline.txt"));
-        uint8 v = uint8(_st2uint256(vm.readFile("script/temp/V.txt")));
-        bytes32 r = _stringToBytes32(vm.readFile("script/temp/R.txt"));
-        bytes32 s = _stringToBytes32(vm.readFile("script/temp/S.txt"));
+        uint8 v = uint8(vm.envUint('V_VALUE'));
+        bytes32 r = vm.envBytes32('R_VALUE');
+        bytes32 s = vm.envBytes32('S_VALUE');
 
-        string memory hexString = vm.readFile("script/temp/R.txt");
-
-        string memory hstr = "aa";
-        uint stringInBytes32 = _st2uint256(hstr)-39*2;
-        uint num = 0xaa;
-        bool isTrue = stringInBytes32 == num;
-        console.log(isTrue);
-        console.log(hstr);
-        console.log(stringInBytes32);
-
-        console.log("r from read:", hexString);
-        console.logBytes(bytes(hexString));
-
+        vm.startBroadcast();
+        _getAndApproveWETH();
+        srouter.bridgeDepositAndBorrow(
+            destDomain,
+            address(bvault),
+            address(weth),
+            amountToDeposit,
+            amountToBorrow,
+            deadline,
+            v,
+            r,
+            s
+        );
         _consoleLogInfo(deadline, v, r, s);
-
-        // vm.startBroadcast();
-        // _getAndApproveWETH();
-        // srouter.bridgeDepositAndBorrow(
-        //     destDomain,
-        //     address(bvault),
-        //     address(weth),
-        //     amountToDeposit,
-        //     amountToBorrow,
-        //     deadline,
-        //     v,
-        //     r,
-        //     s
-        // );
-        // _consoleLogInfo(deadline, v, r, s);
-        // vm.stopBroadcast();
+        vm.stopBroadcast();
     }
 
     function _assignVariables() internal {

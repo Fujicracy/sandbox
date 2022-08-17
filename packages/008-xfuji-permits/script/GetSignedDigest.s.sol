@@ -35,17 +35,13 @@ contract GetSignedDigest is Const, TestParams, Test {
 
     function run() public {
         _assignVariables();
-        // (bytes32 digest_, uint256 deadline) = _getDigest();
-        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-        //     _readPKey(),
-        //     digest_
-        // );
-        bytes32 digest_ = 0x0fa9b765f35e9f176d5dd53b817185e8f693a3a6407a4ff5c55ed9b3402b4f80;
-        uint256 deadline = 1660842300;
-        uint8 v = 27;
-        bytes32 s = 0x0fa9b765f35e9f176d5dd53b817185e8f693a3a6407a4ff5c55ed9b3402b4f81;
-        bytes32 r = 0x0fa9b765f35e9f176d5dd53b817185e8f693a3a6407a4ff5c55ed9b3402b4f82;
-        _consoleLogInfo(digest_, deadline, v, r, s);
+        (bytes32 digest, uint256 deadline) = _getDigest();
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            _readPKey(),
+            digest
+        );
+        _consoleLogInfo(digest, deadline, v, r, s);
+        _saveTempFiles(digest, deadline, v, r, s);
     }
 
     function _assignVariables() internal {
@@ -59,9 +55,16 @@ contract GetSignedDigest is Const, TestParams, Test {
         key = _bytesToUint(readBytes);
     }
 
-    function _bytesToUint(bytes memory b) internal pure returns (uint256 number){
-        for(uint i=0;i<b.length;i++){
-            number = number + uint(uint8(b[i]))*(2**(8*(b.length-(i+1))));
+    function _bytesToUint(bytes memory b)
+        internal
+        pure
+        returns (uint256 number)
+    {
+        for (uint256 i = 0; i < b.length; i++) {
+            number =
+                number +
+                uint256(uint8(b[i])) *
+                (2**(8 * (b.length - (i + 1))));
         }
     }
 
@@ -97,7 +100,7 @@ contract GetSignedDigest is Const, TestParams, Test {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) internal {
+    ) internal view {
         console.log("digest");
         console.logBytes32(digest);
         console.log("deadline", deadline);
@@ -106,13 +109,21 @@ contract GetSignedDigest is Const, TestParams, Test {
         console.logBytes32(r);
         console.log("s");
         console.logBytes32(s);
-        _saveDeadline(deadline);
-        _saveV(v);
-        _saveR(r);
-        _saveS(s);
     }
 
-    function _saveDigest(uint256 _digest) internal {
+    function _saveTempFiles(
+        bytes32 _digest,
+        uint256 _deadline,
+        uint256 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) internal {
+        _saveDigest(_digest);
+        _saveDeadline(_deadline);
+        _saveEnvSigValues(_v, _r, _s);
+    }
+
+    function _saveDigest(bytes32 _digest) internal {
         vm.writeFile("script/temp/Digest.txt", vm.toString(_digest));
     }
 
@@ -120,28 +131,48 @@ contract GetSignedDigest is Const, TestParams, Test {
         vm.writeFile("script/temp/deadline.txt", vm.toString(_deadline));
     }
 
-    function _saveV(uint256 _v) internal {
-        vm.writeFile("script/temp/V.txt", vm.toString(_v));
-    }
-
-    function _saveR(bytes32 _r) internal {
+    function _saveEnvSigValues(
+        uint256 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) internal {
         vm.writeFile(
-            "script/temp/TempR.s.sol", 
+            "script/temp/sig_values.txt",
             string(
-                abi.encode(
-                    '// SPDX-License-Identifier: UNLICENSED'
-                    'pragma solidity 0.8.15; ',
-                    'contract TempR {  ',
-                    'bytes32 public constant R_VALUE =',vm.toString(_r),';',
-                    '}'
+                abi.encodePacked(
+                    " export V_VALUE=",
+                    vm.toString(_v),
+                    " export R_VALUE=",
+                    vm.toString(_r),
+                    " export S_VALUE=",
+                    vm.toString(_s)
                 )
             )
         );
     }
 
-    function _saveS(bytes32 _s) internal {
-        vm.writeFile("script/temp/S.txt", vm.toString(_s));
-    }
+    // function _saveV(uint256 _v) internal {
+    //     vm.writeFile("script/temp/V.txt", vm.toString(_v));
+    // }
+
+    // function _saveR(bytes32 _r) internal {
+    //     vm.writeFile(
+    //         "script/temp/temp_r.variable",
+    //         string(
+    //             abi.encodePacked(
+    //                 '// SPDX-License-Identifier: UNLICENSED'
+    //                 'pragma solidity 0.8.15; ',
+    //                 'contract TempR {  ',
+    //                 'bytes32 public constant R_VALUE =',vm.toString(_r),';',
+    //                 '}'
+    //             )
+    //         )
+    //     );
+    // }
+
+    // function _saveS(bytes32 _s) internal {
+    //     vm.writeFile("script/temp/S.txt", vm.toString(_s));
+    // }
 
     function _verifyStructHashAsset(
         BorrowingVault bvault_,
