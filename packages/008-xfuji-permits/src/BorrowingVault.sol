@@ -8,6 +8,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
+import "forge-std/console.sol";
+
 contract BorrowingVault is BaseVault {
     using Math for uint256;
     using SafeERC20 for IERC20;
@@ -15,8 +17,7 @@ contract BorrowingVault is BaseVault {
     constructor(
         address asset_,
         address debtAsset_,
-        address oracle_,
-        address chief_
+        address oracle_
     )
         BaseVault(
             // asset_
@@ -25,8 +26,6 @@ contract BorrowingVault is BaseVault {
             debtAsset_,
             //oracle
             oracle_,
-            //chief
-            chief_,
             // name_
             string(
                 abi.encodePacked(
@@ -226,6 +225,7 @@ contract BorrowingVault is BaseVault {
 
         // no debt
         if (debtShares == 0) {
+            console.log('debtshareszero');
             freeAssets = convertToAssets(balanceOf(owner));
         } else {
             uint256 debt = convertToDebt(debtShares);

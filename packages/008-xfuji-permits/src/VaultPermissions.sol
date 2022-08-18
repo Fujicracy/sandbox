@@ -5,6 +5,8 @@ import {EIP712} from "@openzeppelin/contracts/utils/cryptography/draft-EIP712.so
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
+import "forge-std/console.sol";
+
 contract VaultPermissions is EIP712 {
     using Counters for Counters.Counter;
 
@@ -185,9 +187,11 @@ contract VaultPermissions is EIP712 {
             )
         );
 
-        bytes32 hash = _hashTypedDataV4(structHash);
+        bytes32 digest = _hashTypedDataV4(structHash);
+        console.log('inside-bvault-digest');
+        console.logBytes32(digest);
 
-        address signer = ECDSA.recover(hash, v, r, s);
+        address signer = ECDSA.recover(digest, v, r, s);
         require(signer == owner, "Invalid signature");
 
         _setAssetAllowance(owner, spender, value);
@@ -218,12 +222,11 @@ contract VaultPermissions is EIP712 {
             )
         );
 
-        bytes32 hash = _hashTypedDataV4(structHash);
-
-        address signer = ECDSA.recover(hash, v, r, s);
+        bytes32 digest = _hashTypedDataV4(structHash);
+        address signer = ECDSA.recover(digest, v, r, s);
         require(signer == owner, "Invalid signature");
 
-        _setAssetAllowance(owner, spender, value);
+        _setDebtAllowance(owner, spender, value);
     }
 
     /// Internal Functions
