@@ -1,0 +1,9 @@
+{
+  "name": "008-xfuji-permits",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "bash ./test/x-callTest.sh"
+  }
+}
