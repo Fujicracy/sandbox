@@ -1,7 +1,7 @@
 import { useActor, useSelector } from "@xstate/react"
 import { NextComponentType } from "next"
 import { useContext } from "react"
-import { GlobalStateContext } from "../_app"
+import { GlobalStateContext } from "../pages/_app"
 import Button from "./Button"
 import { AuthStateMachine } from "./machines/authMachine"
 

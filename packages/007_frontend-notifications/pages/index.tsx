@@ -1,7 +1,7 @@
 import type { NextPage } from "next"
 import Head from "next/head"
-import Experiment1 from "./components/experiment1"
-import Experiment2 from "./components/experiment2"
+import Experiment1 from "../components/Experiment1"
+import Experiment2 from "../components/Experiment2"
 
 const Home: NextPage = () => {
   return (
