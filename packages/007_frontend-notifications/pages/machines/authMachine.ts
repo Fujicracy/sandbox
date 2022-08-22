@@ -4,7 +4,9 @@ import Onboard from "@web3-onboard/core"
 import injectedModule from "@web3-onboard/injected-wallets"
 // import { initializeWalletModules } from "@web3-onboard/core/dist/store/actions"
 
-const MAINNET_RPC_URL = "https://mainnet.infura.io/v3/<INFURA_KEY>"
+// Careful, look like if <ID> is not defined we fall into infinite loop or something similar. To check: is it a bug from blocknative ?
+const MAINNET_RPC_URL =
+  "https://mainnet.infura.io/v3/cd3191fb4c5d46ea8916dbbacb904b4b"
 
 const injected = injectedModule()
 

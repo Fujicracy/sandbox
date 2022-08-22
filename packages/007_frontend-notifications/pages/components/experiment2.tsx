@@ -3,6 +3,8 @@ import { NextComponentType } from "next"
 import { FormEvent, useEffect, useState } from "react"
 import Button from "./Button"
 
+// Note: we can use chainId in each tx to know from what chain they r coming from.
+// Idea: providers: { chainId: Prodider }
 const Experiment2: NextComponentType = () => {
   const [transactions, setTransactions] = useState<null | any>(null)
   useEffect(() => console.log(transactions), [transactions])
@@ -23,6 +25,11 @@ const Experiment2: NextComponentType = () => {
         "epIIrIB4Qiv8MX6viqdNdINEDBB1D9Fn"
       ),
     }
+
+    setTransactions({
+      tx1: { ...transactions?.tx1, status: "fetching" },
+      tx2: { ...transactions?.tx2, status: "fetching" },
+    })
 
     const promises = await Promise.allSettled([
       provider.mainnet
@@ -71,7 +78,7 @@ const Experiment2: NextComponentType = () => {
 }
 
 interface TransactionProps {
-  status: string
+  status: "error" | "fetching" | "fetched"
   network: string
   res?: object
   err?: Error
@@ -79,14 +86,24 @@ interface TransactionProps {
 const Transaction = (props: TransactionProps) => {
   const { status, res, err, network } = props
 
+  let content
+  switch (status) {
+    case "error":
+      content = err.toString()
+      break
+    case "fetching":
+      content = "Fetching..."
+      break
+    case "fetched":
+      content = <pre className="text-xs">{JSON.stringify(res, null, 2)}</pre>
+      break
+  }
+
+  console.log({ status })
+
   return (
     <div className="grow border rounded border-slate-300 px-4 py-2 overflow-auto">
-      Tx on <strong>{network}</strong>:
-      {status === "error" && err ? (
-        err.toString()
-      ) : (
-        <pre>{JSON.stringify(res, null, 2)}</pre>
-      )}
+      Tx on <strong>{network}</strong>: {content}
     </div>
   )
 }
