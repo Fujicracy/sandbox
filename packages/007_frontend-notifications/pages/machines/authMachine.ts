@@ -14,7 +14,7 @@ const onboard = Onboard({
     {
       id: "0x1",
       token: "ETH",
-      label: "Ethereum Mainnet",
+      label: "Ethereum",
       rpcUrl: MAINNET_RPC_URL,
     },
   ],
