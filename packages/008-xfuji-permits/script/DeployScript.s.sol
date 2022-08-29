@@ -26,7 +26,7 @@ contract DeployScript is Const, Script {
         mumbai
     }
 
-    Chains public deployChain = Chains.goerli;
+    Chains public deployChain = Chains.optimisticG;
 
     address public weth;
     address public usdc;

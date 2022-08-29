@@ -18,12 +18,12 @@ contract AaveV3OptiG is ILendingProvider {
     {
         return
             IAaveProtocolDataProvider(
-                0x9BE876c6DC42215B00d7efe892E2691C3bc35d10
+                0x42BdE9c98B80e83F1B051B4bb11812aDa314213a
             );
     }
 
     function _getPool() internal pure returns (IPool) {
-        return IPool(0x368EedF3f56ad10b9bC57eed4Dac65B26Bb667f6);
+        return IPool(0x4b529A5d8268d74B687aC3dbb00e1b85bF4BF0d4);
     }
 
     /**

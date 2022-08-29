@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.15;
 
+//  weth-priceFeed 0xbd7919D43BdC46d7770e3272BFea4123D21Bd6DE
+//  usdc-priceFeed 0x4B4E814D38e74B00e7EC50B4BF86595f175665B6
+//  fujioracle 0x48b4A79a6400b0D8a8bB9dac7514a70922b1D48B
+//  aaveV3 0xcAc878f822f42Ab18F87AAb336227acc7f953584
+//  bvault 0x1BFE4fa607FB13384A0A6b58503C92E0aDD4fE19
+//  srouter 0xf0966A07C5337eEA480e4fada380C57249C7dDF2
+//  helper 0xc30752c44bdC21E7d108D3CE96993f1a2F443182
+
 contract Const {
     //  Latest deployment addresses August-16-2022:
 
