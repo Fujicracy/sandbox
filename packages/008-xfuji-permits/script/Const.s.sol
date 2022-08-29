@@ -12,18 +12,18 @@ pragma solidity 0.8.15;
 contract Const {
     //  Latest deployment addresses August-16-2022:
 
-    address public constant BVAULT = 0x84cae60A4a1A058101E8Cab325E3745102811350;
+    address public constant BVAULT = 0x1BFE4fa607FB13384A0A6b58503C92E0aDD4fE19;
     address public constant SROUTER =
-        0x69A2c6d4dc6A5De2459b6E7D0e5deeD3da2C9cAf;
+        0xf0966A07C5337eEA480e4fada380C57249C7dDF2;
     address public constant SIGHELPER =
-        0x09Cf11E589A10B097D00Af8767284983f01D918C;
+        0xc30752c44bdC21E7d108D3CE96993f1a2F443182;
 
     // External constants and addresses:
 
     address public constant FUJI_ORACLE =
-        0x459B490F86e6B7C86086511D6a378f8C4b313D17;
+        0x48b4A79a6400b0D8a8bB9dac7514a70922b1D48B;
     address public constant AAVE_V3_PROVIDER =
-        0xc5d5a86E9f752e241eAc96a0595E4Cd6adc05F5a;
+        0xcAc878f822f42Ab18F87AAb336227acc7f953584;
 
     uint32 public constant DOMAIN_ID_RINKEBY = 1111;
     address public constant WETH_RINKEBY =
