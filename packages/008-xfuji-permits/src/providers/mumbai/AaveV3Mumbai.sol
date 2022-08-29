@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.9;
 
-import {ILendingProvider} from "@xfuji/interfaces/ILendingProvider.sol";
-import {IAaveProtocolDataProvider} from "@xfuji/interfaces/aaveV3/IAaveProtocolDataProvider.sol";
-import {IPool} from "@xfuji/interfaces/aaveV3/IPool.sol";
+import {ILendingProvider} from "../../interfaces/ILendingProvider.sol";
+import {IAaveProtocolDataProvider} from "../../interfaces/aaveV3/IAaveProtocolDataProvider.sol";
+import {IPool} from "../../interfaces/aaveV3/IPool.sol";
 
 /**
  * @title AaveV3 Lending Provider.

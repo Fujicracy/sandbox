@@ -27,15 +27,29 @@ contract Const {
     address public constant TEST_TOKEN_RINKEBY =
         0x3FFc03F05D1869f493c7dbf913E636C6280e0ff9;
 
-    uint32 public constant DOMAIN_ID_GOERLI = 3331;
+    uint32 public constant DOMAIN_ID_GOERLI = 1735353714;
     address public constant WETH_GOERLI =
         0x2e3A2fb8473316A02b8A297B982498E661E1f6f5;
     address public constant USDC_GOERLI =
         0xA2025B15a1757311bfD68cb14eaeFCc237AF5b43;
     address public constant CONNEXT_HANDLER_GOERLI =
-        0x6c9a905Ab3f4495E2b47f5cA131ab71281E0546e;
+        0xB4C1340434920d70aD774309C75f9a4B679d801e;
+    address public constant TOKEN_REGISTRY_GOERLI =
+        0x3f95CEF37566D0B101b8F9349586757c5D1F2504;
     address public constant TEST_TOKEN_GOERLI =
-        0x26FE8a8f86511d678d031a022E48FfF41c6a3e3b;
+        0x7ea6eA49B0b0Ae9c5db7907d139D9Cd3439862a1;
+
+    uint32 public constant DOMAIN_ID_OPTIMISM_G = 1735356532;
+    address public constant WETH_OPTIMISM_G =
+        0x09bADef78f92F20fd5f7a402dbb1d25d4901aAb2;
+    address public constant USDC_OPTIMISM_G =
+        0xf1485Aa729DF94083ab61B2C65EeA99894Aabdb3;
+    address public constant CONNEXT_HANDLER_OPTIMISM_G =
+        0xe37f1f55eab648dA87047A03CB03DeE3d3fe7eC7;
+    address public constant TOKEN_REGISTRY_OPTIMISM_G =
+        0x67fE7B3a2f14c6AC690329D433578eEFE59954C8;
+    address public constant TEST_TOKEN_OPTIMISM_G =
+        0x68Db1c8d85C09d546097C65ec7DCBFF4D6497CbF;
 
     uint32 public constant DOMAIN_ID_MUMBAI = 9991;
     address public constant WETH_MUMBAI =
