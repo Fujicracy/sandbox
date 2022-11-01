@@ -4,15 +4,15 @@ pragma solidity ^0.8.13;
 import "forge-std/console.sol";
 import {ScriptPlus} from "./ScriptPlus.sol";
 import {IConnextHandler} from "nxtp/core/connext/interfaces/IConnextHandler.sol";
+import {BorrowingVault} from "../src/vaults/borrowing/BorrowingVault.sol";
 import {IVault} from "../src/interfaces/IVault.sol";
-import {Vault, ERC20} from "../src/Vault.sol";
 import {XRouter} from "../src/XRouter.sol";
 import {IWETH9} from "../src/helpers/PeripheryPayments.sol";
 import {AaveV3Rinkeby} from "../src/providers/rinkeby/AaveV3Rinkeby.sol";
 import {ILendingProvider} from "../src/interfaces/ILendingProvider.sol";
 
 contract DeployRinkeby is ScriptPlus {
-  Vault public vault;
+  IVault public vault;
   XRouter public router;
   ILendingProvider public aaveV3;
 
@@ -43,12 +43,13 @@ contract DeployRinkeby is ScriptPlus {
     router = new XRouter(weth, connextHandler);
     saveAddress("./deployments/rinkeby/XRouter", address(router));
 
-    vault = new Vault(
+    vault = new BorrowingVault(
       asset,
       debtAsset,
-      oracle
+      oracle,
+      address(0)
     );
-    saveAddress("./deployments/rinkeby/Vault", address(vault));
+    saveAddress("./deployments/rinkeby/BorrowingVault", address(vault));
 
     vault.setActiveProvider(aaveV3);
     router.registerVault(IVault(address(vault)));

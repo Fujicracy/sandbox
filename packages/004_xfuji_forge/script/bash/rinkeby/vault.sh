@@ -4,8 +4,8 @@
 
 AAVE_V3=$(cat ./deployments/rinkeby/AaveV3Rinkeby)
 
-deploy_contract Vault --constructor-args $ASSET $DEBT_ASSET $ORACLE
+deploy_contract BorrowingVault --constructor-args $ASSET $DEBT_ASSET $ORACLE 0
 
-VAULT=$(cat ./deployments/rinkeby/Vault)
+VAULT=$(cat ./deployments/rinkeby/BorrowingVault)
 
 cast_tx $VAULT "setActiveProvider(address)" $AAVE_V3

@@ -7,11 +7,41 @@ pragma solidity ^0.8.9;
  * @notice Defines the interface for vault operations extending from IERC4326.
  */
 
-import "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
-import "./ILendingProvider.sol";
+import {IERC4626} from "openzeppelin-contracts/contracts/interfaces/IERC4626.sol";
+import {ILendingProvider} from "./ILendingProvider.sol";
 
 interface IVault is IERC4626 {
+
+  struct Factor {
+    uint64 num;
+    uint64 denum;
+  }
+
+  event Borrow(
+    address indexed caller,
+    address indexed owner,
+    uint256 debt,
+    uint256 shares
+  );
+
+  event Payback(
+    address indexed caller,
+    address indexed owner,
+    uint256 debt,
+    uint256 shares
+  );
+
+  function debtDecimals() external view returns (uint8);
+
   function debtAsset() external view returns (address);
+
+  function totalDebt() external view returns (uint256);
+
+  function convertDebtToShares(uint256 debt) external view returns (uint256 shares);
+
+  function convertToDebt(uint256 shares) external view returns (uint256 debt);
+
+  function maxBorrow(address borrower) external view returns (uint256);
 
   /**
    * @dev Mints debtShares to owner by taking a loan of exact amount of underlying tokens.
@@ -37,4 +67,6 @@ interface IVault is IERC4626 {
   function payback(uint256 debt, address receiver) external returns (uint256);
 
   function setActiveProvider(ILendingProvider activeProvider) external;
+
+  function activeProvider() external returns (ILendingProvider);
 }
