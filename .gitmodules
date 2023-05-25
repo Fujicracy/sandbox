@@ -31,3 +31,6 @@
 [submodule "packages/008-xfuji-permits/lib/x-fuji"]
 	path = packages/008-xfuji-permits/lib/x-fuji
 	url = https://github.com/Fujicracy/x-fuji
+[submodule "packages/009_basic_diamond/lib/forge-std"]
+	path = packages/009_basic_diamond/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
