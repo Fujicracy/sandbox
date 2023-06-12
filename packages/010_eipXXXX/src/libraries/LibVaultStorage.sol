@@ -3,22 +3,51 @@ pragma solidity 0.8.17;
 
 import {IERC20} from "../interfaces/IERC20.sol";
 import {ILendingProvider} from "./../interfaces/ILendingProvider.sol";
+import {IChief} from "./../interfaces/IChief.sol";
+import {IFujiOracle} from "./../interfaces/IFujiOracle.sol";
 import {VaultActions} from "./../interfaces/IVaultPausable.sol";
 import {Math, Rounding} from "./openzeppelin/Math.sol";
 import {Address} from "./openzeppelin/Address.sol";
 
 struct AppStorage {
+  VaultPropertyStorage properties;
+  VaultAccountingStorage accounting;
+  VaultExtAddrStorage extAddresses;
+  VaultSecurityStorage security;
+}
+
+struct VaultPropertyStorage {
   string vaultName;
   string vaultSymbol;
   IERC20 asset;
   IERC20 debtAsset;
-  mapping(address => uint256) assetShareBalances;
-  mapping(address => uint256) debtShareBalances;
-  uint256 totalAssetShareSupply;
-  uint256 totalDebtShareSupply;
   uint8 assetDecimals;
   uint8 debtDecimals;
+  uint256 minAmount;
+  uint256 maxLtv;
+}
+
+struct VaultAccountingStorage {
+  uint256 totalAssetShareSupply;
+  uint256 totalDebtShareSupply;
+  ///@dev mapping structure: owner => shares
+  mapping(address => uint256) assetShareBalances;
+  ///@dev mapping structure: owner => shares
+  mapping(address => uint256) debtShareBalances;
+  /// @dev Allowance mapping structure: owner => operator => receiver => amount.
+  mapping(address => mapping(address => mapping(address => uint256))) withdrawAllowance;
+  /// @dev Allowance mapping structure: owner => operator => receiver => amount.
+  mapping(address => mapping(address => mapping(address => uint256))) debtAllowance;
+}
+
+struct VaultExtAddrStorage {
+  IChief chief;
+  IFujiOracle oracle;
+  ILendingProvider activeProvider;
   ILendingProvider[] providers;
+}
+
+struct VaultSecurityStorage {
   mapping(VaultActions => bool) actionsPaused;
 }
 
@@ -65,25 +94,59 @@ library LibVaultLogic {
     return (shareSupply == 0) ? shares : shares.mulDiv(totalAssets, shareSupply, rounding);
   }
 
-  function _computeFreeAssets(
-    address owner,
-    uint256 totalAssets_
+  /**
+   * @dev Execute an action at provider.
+   *
+   * @param assets amount handled in this action
+   * @param name string of the method to call
+   * @param provider to whom action is being called
+   */
+  function _executeProviderAction(
+    uint256 assets,
+    string memory name,
+    ILendingProvider provider
   )
     internal
-    view
-    override
+  {
+    bytes memory data = abi.encodeWithSignature(
+      string(abi.encodePacked(name, "(uint256,address)")), assets, address(this)
+    );
+    address(provider).functionDelegateCall(
+      data, string(abi.encodePacked(name, ": delegate call failed"))
+    );
+  }
+
+  /**
+   * @dev Returns how much free 'assets' a user can withdraw or transfer
+   * given their `balanceOfDebt()` and collateralization.
+   * Requirements:
+   * - Must be feed price from {FujiOracle} using {getPriceOf(asset(), debtAsset(), assetDecimals())}
+   *
+   * @param assets used as collateral
+   * @param debt outstanding
+   * @param debtDecimals of the debt asset {IERC20Metadata-decimals()}
+   * @param price of `debt` in terms of `asset` expressed in asset decimals
+   * @param maxLtv ratio allowed for this vault's asset (collateral)
+   */
+  function _computeFreeAssets(
+    uint256 assets,
+    uint256 debt,
+    uint8 debtDecimals,
+    uint256 price,
+    uint256 maxLtv
+  )
+    internal
+    pure
     returns (uint256 freeAssets)
   {
-    uint256 debtShares = _debtShares[owner];
-    uint256 assets = _convertToAssets(balanceOf(owner), totalAssets_, Math.Rounding.Down);
-
-    // Handle no debt case.
-    if (debtShares == 0) {
+    if (assets == 0 || price == 0 || maxLtv == 0) {
+      // Handle no assets, zero prize and/or zero maxLtv cases.
+      freeAssets = 0;
+    } else if (assets > 0 && debt == 0) {
+      // Handle no debt case.
       freeAssets = assets;
     } else {
-      uint256 debt = _convertToDebt(debtShares, totalDebt(), Math.Rounding.Up);
-      uint256 price = oracle.getPriceOf(asset(), debtAsset(), decimals());
-      uint256 lockedAssets = (debt * 1e18 * price) / (maxLtv * 10 ** _debtDecimals);
+      uint256 lockedAssets = debt.mulDiv(1e18 * price, maxLtv * 10 ** debtDecimals);
 
       if (lockedAssets == 0) {
         // Handle wei level amounts in where 'lockedAssets' < 1 wei.
@@ -102,11 +165,11 @@ library LibVaultLogic {
    * @param providers at where to check balance
    */
   function _checkProvidersBalance(
-    string method,
-    ILendingProvider[] providers
+    string memory method,
+    ILendingProvider[] memory providers
   )
-    view
     internal
+    view
     returns (uint256 assets)
   {
     uint256 len = providers.length;
