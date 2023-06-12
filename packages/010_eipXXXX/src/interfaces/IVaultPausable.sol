@@ -7,6 +7,10 @@ pragma solidity 0.8.17;
  * @author Fujidao Labs
  *
  * @notice Defines the interface {PausableVault} contract.
+ *
+ * @dev It contains granular pause control over all vault actions. This contract
+ * should be inherited by a vault implementation. The code is inspired on
+ * OpenZeppelin-Pausable contract.
  */
 
 enum VaultActions {
