@@ -3,6 +3,6 @@ pragma solidity 0.8.17;
 
 import {AppStorage} from "./../../libraries/LibVaultStorage.sol";
 
-contract VaultLiquidations is IERC4627 {
+contract VaultLiquidations {
   AppStorage internal s;
 }
