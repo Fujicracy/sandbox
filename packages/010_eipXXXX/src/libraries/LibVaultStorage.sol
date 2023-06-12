@@ -139,12 +139,12 @@ library LibVaultLogic {
     pure
     returns (uint256 freeAssets)
   {
-    if (assets == 0 || price == 0 || maxLtv == 0) {
-      // Handle no assets, zero prize and/or zero maxLtv cases.
-      freeAssets = 0;
-    } else if (assets > 0 && debt == 0) {
+    if (debt == 0) {
       // Handle no debt case.
       freeAssets = assets;
+    } else if (assets == 0 || price == 0 || maxLtv == 0) {
+      // Handle zero price and/or zero maxLtv cases.
+      freeAssets = 0;
     } else {
       uint256 lockedAssets = debt.mulDiv(1e18 * price, maxLtv * 10 ** debtDecimals);
 
