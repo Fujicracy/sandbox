@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.17;
 
-import {
-  AppStorage,
-  VaultPropertyStorage,
-  VaultAccountingStorage,
-  VaultExtAddrStorage,
-  VaultSecurityStorage
-} from "./../../libraries/LibVaultStorage.sol";
+import {AppStorage} from "./../../libraries/LibVaultStorage.sol";
 import {SystemAccessControl} from "../../access/SystemAccessControl.sol";
 import {IVaultPausable, VaultActions} from "./../../interfaces/IVaultPausable.sol";
 
