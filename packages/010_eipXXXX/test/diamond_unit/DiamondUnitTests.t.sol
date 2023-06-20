@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.17;
 
-import {Routines, console} from "../Routines.t.sol";
+import {DiamondRoutines, console} from "../DiamondRoutines.t.sol";
 import {IDiamond} from "../../src/interfaces/IDiamond.sol";
 import {IDiamondLoupe} from "../../src/interfaces/IDiamondLoupe.sol";
 import {IDiamondCut} from "../../src/interfaces/IDiamondCut.sol";
 import {OwnershipFacet} from "../../src/facets/diamond/OwnershipFacet.sol";
 
-contract DiamondUnitTests is Routines {
+contract DiamondUnitTests is DiamondRoutines {
   function setUp() public {
     _deploySimpleDiamond();
   }
@@ -40,7 +40,8 @@ contract DiamondUnitTests is Routines {
   }
 
   function test_ownershipExpectedSelectors() public {
-    bytes4[] memory readSelectors = IDiamondLoupe(diamond).facetFunctionSelectors(address(ownership));
+    bytes4[] memory readSelectors =
+      IDiamondLoupe(diamond).facetFunctionSelectors(address(ownership));
     bytes4[] memory expectedSelectors = new bytes4[](2);
     expectedSelectors[0] = bytes4(OwnershipFacet.transferOwnership.selector);
     expectedSelectors[1] = bytes4(OwnershipFacet.owner.selector);
@@ -70,6 +71,6 @@ contract DiamondUnitTests is Routines {
 
   function test_whoIsOwner() public {
     address returnedOwner = OwnershipFacet(diamond).owner();
-    assertEq(returnedOwner, ALICE);
+    assertEq(returnedOwner, address(this));
   }
 }
