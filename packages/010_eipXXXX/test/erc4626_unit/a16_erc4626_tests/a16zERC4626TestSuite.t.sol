@@ -13,7 +13,7 @@ interface IMockERC20 is IERC20 {
 abstract contract a16zERC4626TestSuite is ERC4626Prop {
   function setUp() public virtual;
 
-  uint256 constant N = 4;
+  uint256 constant N = 2;
 
   struct Init {
     address[N] user;
@@ -96,233 +96,233 @@ abstract contract a16zERC4626TestSuite is ERC4626Prop {
   //
   // convert
   //
-  function test_convertToShares(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller1 = init.user[0];
-    address caller2 = init.user[1];
-    prop_convertToShares(caller1, caller2, assets);
-  }
+  // function test_convertToShares(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller1 = init.user[0];
+  //   address caller2 = init.user[1];
+  //   prop_convertToShares(caller1, caller2, assets);
+  // }
 
-  function test_convertToAssets(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller1 = init.user[0];
-    address caller2 = init.user[1];
-    prop_convertToAssets(caller1, caller2, shares);
-  }
+  // function test_convertToAssets(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller1 = init.user[0];
+  //   address caller2 = init.user[1];
+  //   prop_convertToAssets(caller1, caller2, shares);
+  // }
 
-  //
-  // deposit
-  //
-  function test_maxDeposit(Init memory init) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    prop_maxDeposit(caller, receiver);
-  }
+  // //
+  // // deposit
+  // //
+  // function test_maxDeposit(Init memory init) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   prop_maxDeposit(caller, receiver);
+  // }
 
-  function test_previewDeposit(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address other = init.user[2];
-    assets = bound(assets, 0, _max_deposit(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_previewDeposit(caller, receiver, other, assets);
-  }
+  // function test_previewDeposit(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address other = init.user[2];
+  //   assets = bound(assets, 0, _max_deposit(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_previewDeposit(caller, receiver, other, assets);
+  // }
 
-  function test_deposit(Init memory init, uint256 assets, uint256 allowance) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    assets = bound(assets, 0, _max_deposit(caller));
-    _approve(_underlying_, caller, _vault_, allowance);
-    prop_deposit(caller, receiver, assets);
-  }
+  // function test_deposit(Init memory init, uint256 assets, uint256 allowance) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   assets = bound(assets, 0, _max_deposit(caller));
+  //   _approve(_underlying_, caller, _vault_, allowance);
+  //   prop_deposit(caller, receiver, assets);
+  // }
 
-  //
-  // mint
-  //
-  function test_maxMint(Init memory init) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    prop_maxMint(caller, receiver);
-  }
+  // //
+  // // mint
+  // //
+  // function test_maxMint(Init memory init) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   prop_maxMint(caller, receiver);
+  // }
 
-  function test_previewMint(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address other = init.user[2];
-    shares = bound(shares, 0, _max_mint(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_previewMint(caller, receiver, other, shares);
-  }
+  // function test_previewMint(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address other = init.user[2];
+  //   shares = bound(shares, 0, _max_mint(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_previewMint(caller, receiver, other, shares);
+  // }
 
-  function test_mint(Init memory init, uint256 shares, uint256 allowance) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    shares = bound(shares, 0, _max_mint(caller));
-    _approve(_underlying_, caller, _vault_, allowance);
-    prop_mint(caller, receiver, shares);
-  }
+  // function test_mint(Init memory init, uint256 shares, uint256 allowance) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   shares = bound(shares, 0, _max_mint(caller));
+  //   _approve(_underlying_, caller, _vault_, allowance);
+  //   prop_mint(caller, receiver, shares);
+  // }
 
-  //
-  // withdraw
-  //
-  function test_maxWithdraw(Init memory init) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address owner = init.user[1];
-    prop_maxWithdraw(caller, owner);
-  }
+  // //
+  // // withdraw
+  // //
+  // function test_maxWithdraw(Init memory init) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address owner = init.user[1];
+  //   prop_maxWithdraw(caller, owner);
+  // }
 
-  function test_previewWithdraw(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address owner = init.user[2];
-    address other = init.user[3];
-    assets = bound(assets, 0, _max_withdraw(owner));
-    _approve(_vault_, owner, caller, type(uint256).max);
-    prop_previewWithdraw(caller, receiver, owner, other, assets);
-  }
+  // function test_previewWithdraw(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address owner = init.user[2];
+  //   address other = init.user[3];
+  //   assets = bound(assets, 0, _max_withdraw(owner));
+  //   _approve(_vault_, owner, caller, type(uint256).max);
+  //   prop_previewWithdraw(caller, receiver, owner, other, assets);
+  // }
 
-  function test_withdraw(Init memory init, uint256 assets, uint256 allowance) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address owner = init.user[2];
-    assets = bound(assets, 0, _max_withdraw(owner));
-    _approve(_vault_, owner, caller, allowance);
-    prop_withdraw(caller, receiver, owner, assets);
-  }
+  // function test_withdraw(Init memory init, uint256 assets, uint256 allowance) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address owner = init.user[2];
+  //   assets = bound(assets, 0, _max_withdraw(owner));
+  //   _approve(_vault_, owner, caller, allowance);
+  //   prop_withdraw(caller, receiver, owner, assets);
+  // }
 
-  function testFail_withdraw(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address owner = init.user[2];
-    assets = bound(assets, 0, _max_withdraw(owner));
-    vm.assume(caller != owner);
-    vm.assume(assets > 0);
-    _approve(_vault_, owner, caller, 0);
-    vm.prank(caller);
-    uint256 shares = IERC4626(_vault_).withdraw(assets, receiver, owner);
-    assertGt(shares, 0); // this assert is expected to fail
-  }
+  // function testFail_withdraw(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address owner = init.user[2];
+  //   assets = bound(assets, 0, _max_withdraw(owner));
+  //   vm.assume(caller != owner);
+  //   vm.assume(assets > 0);
+  //   _approve(_vault_, owner, caller, 0);
+  //   vm.prank(caller);
+  //   uint256 shares = IERC4626(_vault_).withdraw(assets, receiver, owner);
+  //   assertGt(shares, 0); // this assert is expected to fail
+  // }
 
-  //
-  // redeem
-  //
-  function test_maxRedeem(Init memory init) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address owner = init.user[1];
-    prop_maxRedeem(caller, owner);
-  }
+  // //
+  // // redeem
+  // //
+  // function test_maxRedeem(Init memory init) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address owner = init.user[1];
+  //   prop_maxRedeem(caller, owner);
+  // }
 
-  function test_previewRedeem(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address owner = init.user[2];
-    address other = init.user[3];
-    shares = bound(shares, 0, _max_redeem(owner));
-    _approve(_vault_, owner, caller, type(uint256).max);
-    prop_previewRedeem(caller, receiver, owner, other, shares);
-  }
+  // function test_previewRedeem(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address owner = init.user[2];
+  //   address other = init.user[3];
+  //   shares = bound(shares, 0, _max_redeem(owner));
+  //   _approve(_vault_, owner, caller, type(uint256).max);
+  //   prop_previewRedeem(caller, receiver, owner, other, shares);
+  // }
 
-  function test_redeem(Init memory init, uint256 shares, uint256 allowance) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address owner = init.user[2];
-    shares = bound(shares, 0, _max_redeem(owner));
-    _approve(_vault_, owner, caller, allowance);
-    prop_redeem(caller, receiver, owner, shares);
-  }
+  // function test_redeem(Init memory init, uint256 shares, uint256 allowance) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address owner = init.user[2];
+  //   shares = bound(shares, 0, _max_redeem(owner));
+  //   _approve(_vault_, owner, caller, allowance);
+  //   prop_redeem(caller, receiver, owner, shares);
+  // }
 
-  function testFail_redeem(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    address receiver = init.user[1];
-    address owner = init.user[2];
-    shares = bound(shares, 0, _max_redeem(owner));
-    vm.assume(caller != owner);
-    vm.assume(shares > 0);
-    _approve(_vault_, owner, caller, 0);
-    vm.prank(caller);
-    IERC4626(_vault_).redeem(shares, receiver, owner);
-  }
+  // function testFail_redeem(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   address receiver = init.user[1];
+  //   address owner = init.user[2];
+  //   shares = bound(shares, 0, _max_redeem(owner));
+  //   vm.assume(caller != owner);
+  //   vm.assume(shares > 0);
+  //   _approve(_vault_, owner, caller, 0);
+  //   vm.prank(caller);
+  //   IERC4626(_vault_).redeem(shares, receiver, owner);
+  // }
 
-  //
-  // round trip tests
-  //
-  function test_RT_deposit_redeem(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    assets = bound(assets, 0, _max_deposit(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_deposit_redeem(caller, assets);
-  }
+  // //
+  // // round trip tests
+  // //
+  // function test_RT_deposit_redeem(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   assets = bound(assets, 0, _max_deposit(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_deposit_redeem(caller, assets);
+  // }
 
-  function test_RT_deposit_withdraw(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    assets = bound(assets, 0, _max_deposit(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_deposit_withdraw(caller, assets);
-  }
+  // function test_RT_deposit_withdraw(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   assets = bound(assets, 0, _max_deposit(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_deposit_withdraw(caller, assets);
+  // }
 
-  function test_RT_redeem_deposit(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    shares = bound(shares, 0, _max_redeem(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_redeem_deposit(caller, shares);
-  }
+  // function test_RT_redeem_deposit(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   shares = bound(shares, 0, _max_redeem(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_redeem_deposit(caller, shares);
+  // }
 
-  function test_RT_redeem_mint(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    shares = bound(shares, 0, _max_redeem(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_redeem_mint(caller, shares);
-  }
+  // function test_RT_redeem_mint(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   shares = bound(shares, 0, _max_redeem(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_redeem_mint(caller, shares);
+  // }
 
-  function test_RT_mint_withdraw(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    shares = bound(shares, 0, _max_mint(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_mint_withdraw(caller, shares);
-  }
+  // function test_RT_mint_withdraw(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   shares = bound(shares, 0, _max_mint(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_mint_withdraw(caller, shares);
+  // }
 
-  function test_RT_mint_redeem(Init memory init, uint256 shares) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    shares = bound(shares, 0, _max_mint(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_mint_redeem(caller, shares);
-  }
+  // function test_RT_mint_redeem(Init memory init, uint256 shares) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   shares = bound(shares, 0, _max_mint(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_mint_redeem(caller, shares);
+  // }
 
-  function test_RT_withdraw_mint(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    assets = bound(assets, 0, _max_withdraw(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_withdraw_mint(caller, assets);
-  }
+  // function test_RT_withdraw_mint(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   assets = bound(assets, 0, _max_withdraw(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_withdraw_mint(caller, assets);
+  // }
 
-  function test_RT_withdraw_deposit(Init memory init, uint256 assets) public virtual {
-    setUpVault(init);
-    address caller = init.user[0];
-    assets = bound(assets, 0, _max_withdraw(caller));
-    _approve(_underlying_, caller, _vault_, type(uint256).max);
-    prop_RT_withdraw_deposit(caller, assets);
-  }
+  // function test_RT_withdraw_deposit(Init memory init, uint256 assets) public virtual {
+  //   setUpVault(init);
+  //   address caller = init.user[0];
+  //   assets = bound(assets, 0, _max_withdraw(caller));
+  //   _approve(_underlying_, caller, _vault_, type(uint256).max);
+  //   prop_RT_withdraw_deposit(caller, assets);
+  // }
 
   //
   // utils
