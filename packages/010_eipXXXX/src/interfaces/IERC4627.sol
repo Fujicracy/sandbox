@@ -58,6 +58,16 @@ interface IERC4627 { /*is IERC4626*/
   function totalDebt() external view returns (uint256);
 
   /**
+   * @notice Returns the total amount of debtShares in this vault.
+   * Based on {IERC4626-totalSupply}.
+   *
+   * @dev Requirements:
+   * - Must not revert.
+   * - Must return zero in a {YieldVault}.
+   */
+  function totalSupplyDebtShares() external view returns (uint256);
+
+  /**
    * @notice Returns the amount of shares this vault would exchange for the amount
    * of debt assets provided. Based on {IERC4626-convertToShares}.
    *
@@ -73,7 +83,7 @@ interface IERC4627 { /*is IERC4626*/
    * “average-user’s” price-per-share, meaning what the average user Must expect to see when exchanging to and
    * from.
    */
-  function convertDebtToShares(uint256 debt) external view returns (uint256 shares);
+  function convertToDebtShares(uint256 debt) external view returns (uint256 shares);
 
   /**
    * @notice Returns the amount of debt assets that this vault would exchange for the amount
