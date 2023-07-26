@@ -2,8 +2,13 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import {Test} from "forge-std/Test.sol";
-import {IERC20} from "../../../src/interfaces/IERC20.sol";
-import {IERC4626} from "../../../src/interfaces/IERC4626.sol";
+import {IERC20} from "../../src/interfaces/IERC20.sol";
+import {IERC4626} from "../../src/interfaces/IERC4626.sol";
+
+interface IMockERC20 is IERC20 {
+  function mint(address to, uint256 value) external;
+  function burn(address from, uint256 value) external;
+}
 
 abstract contract ERC4626Prop is Test {
   uint256 internal _delta_;
