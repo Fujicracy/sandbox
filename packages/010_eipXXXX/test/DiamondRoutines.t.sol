@@ -13,6 +13,8 @@ import {VaultConstants} from "./utils/VaultConstants.t.sol";
 import {VaultAssets} from "../src/facets/vault/VaultAssets.sol";
 import {VaultYieldInit} from "../src/upgradeInitializers/VaultInit.sol";
 
+bool constant DEBUG = true;
+
 contract DiamondRoutines is DiamondConstants, VaultConstants {
   function _deployDiamondEssentials()
     private
@@ -20,6 +22,10 @@ contract DiamondRoutines is DiamondConstants, VaultConstants {
   {
     loupe = new DiamondLoupeFacet();
     cut = new DiamondCutFacet();
+    if (DEBUG) {
+      console.log("loupe", address(loupe));
+      console.log("cut", address(cut));
+    }
     return (
       IDiamond.FacetCut(address(loupe), IDiamond.FacetCutAction.Add, loupeSelectors),
       IDiamond.FacetCut(address(cut), IDiamond.FacetCutAction.Add, cutSelectors)
@@ -54,6 +60,10 @@ contract DiamondRoutines is DiamondConstants, VaultConstants {
     yieldVaultFacets[2] =
       IDiamond.FacetCut(address(vault), IDiamond.FacetCutAction.Add, erc4626Selectors);
     init = address(new VaultYieldInit());
+
+    if (DEBUG) {
+      console.log("VaultAssets", address(vault));
+    }
 
     bytes memory initArgs =
       abi.encodeWithSelector(VaultYieldInit.init.selector, asset, chief, name, symbol);
